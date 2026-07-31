@@ -409,7 +409,7 @@ function buildIslandStyles(
     em: "font-style:italic",
     del: "opacity:0.55",
     a: `color:${colors.accent};font-weight:700;text-decoration:none;border-bottom:1px solid ${colors.accent}`,
-    blockquote: `margin:1.7em 0;padding:22px 22px 22px 50px;position:relative;color:${colors.text};background:${colors.surface};border:0;border-radius:${radius.md}px ${radius.xl}px ${radius.md + 2}px ${radius.md + 8}px;font-size:${typography.captionSize}px;line-height:${typography.lineHeight}`,
+    blockquote: `display:flex!important;align-items:flex-start!important;margin:1.7em 0;padding:22px 22px 22px 40px;color:${colors.text};background:${colors.surface};border:0;border-radius:${radius.md}px ${radius.xl}px ${radius.md + 2}px ${radius.md + 8}px;font-size:${typography.captionSize}px;line-height:${typography.lineHeight}`,
     ul: `margin:0 0 1.4em;padding-left:1.45em;color:${colors.text};list-style-type:disc;list-style-position:outside`,
     ol: `margin:0 0 1.4em;padding-left:1.45em;color:${colors.text};list-style-type:decimal;list-style-position:outside`,
     li: `margin:0.45em 0;padding-left:0.2em;line-height:${typography.lineHeight}`,
@@ -839,13 +839,19 @@ function decorateIslandDocument({
 
   root.querySelectorAll("blockquote").forEach((quote) => {
     const mark = doc.createElement("span")
+    const content = doc.createElement("span")
     mark.textContent = "“"
     mark.setAttribute(
       "style",
-      `position:absolute;top:17px;left:19px;color:${colors.accent};font-family:Georgia,serif;font-size:40px;font-weight:700;line-height:1`,
+      `display:block!important;flex:0 0 30px!important;color:${colors.accent};font-family:Georgia,serif;font-size:40px;font-weight:700;line-height:1`,
     )
     mark.setAttribute("aria-hidden", "true")
-    quote.prepend(mark)
+    content.setAttribute(
+      "style",
+      "display:block!important;flex:1 1 0!important;min-width:0!important",
+    )
+    content.append(...Array.from(quote.childNodes))
+    quote.replaceChildren(mark, content)
   })
 
   root.querySelectorAll("hr").forEach((rule) => {
@@ -1381,6 +1387,15 @@ export function inlineDocument(
       .querySelectorAll(selector)
       .forEach((node) => node.setAttribute("style", style))
   })
+  // 微信公众号会在正文外展示文章标题。二级标题作为正文首项时，
+  // 不需要沿用章节之间的顶部留白，根容器自身的 padding 已足够。
+  if (root.firstElementChild?.tagName === "H2") {
+    const firstHeading = root.firstElementChild
+    firstHeading.setAttribute(
+      "style",
+      `${firstHeading.getAttribute("style")};margin-top:0`,
+    )
+  }
   root.querySelectorAll('code[data-inline="true"]').forEach((node) => {
     node.setAttribute(
       "style",
