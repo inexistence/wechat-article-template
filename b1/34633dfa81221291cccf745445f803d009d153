@@ -1,0 +1,40 @@
+README.md
+  s_ea087cf0df620c::t_72cdffbbefed08 35
+scripts/verify-theme-contract.mjs
+  s_ea087cf0df620c::t_aa14992776d513 54,56-59,351-381,386
+src/App.tsx
+  s_a243f152308ede::t_41b207b48edc23 96-99,105,148,159-161,183-188,719,1290-1291,1293-1294,1296,1299,1303-1340
+src/index.css
+  s_ea087cf0df620c::t_8d47b00072bc34 1096-1106
+src/lib/markdown.ts
+  s_a243f152308ede::t_a91fe7820f3ec0 1029-1087,1168-1170
+src/lib/theme.ts
+  s_ea087cf0df620c::t_f64d6874c7e6c0 9,17,27
+src/vite-env.d.ts
+  s_a243f152308ede::t_8f685b386ab4f3 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "b134633dfa81221291cccf745445f803d009d153",
+  "prompts": {},
+  "logical_commit_id": "b134633dfa81221291cccf745445f803d009d153",
+  "sessions": {
+    "s_a243f152308ede": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb7a2-4594-71b3-91b4-e9b8f0e56bb3",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    },
+    "s_ea087cf0df620c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb724-d32c-7b20-8209-14c8640df89c",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
