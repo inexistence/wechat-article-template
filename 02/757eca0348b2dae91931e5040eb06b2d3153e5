@@ -1,0 +1,36 @@
+design/logo-v2-board.svg
+  s_d738719ff5334e::t_1b634a2d6b641e 1-144
+design/logo-v2.svg
+  s_d738719ff5334e::t_285fa1acb86a98 1-18
+public/brand/logo-mark.svg
+  s_d738719ff5334e::t_f99e5a946ff823 1-9
+src/App.tsx
+  s_d738719ff5334e::t_58f097247a1c41 630
+src/index.css
+  s_ea087cf0df620c::t_def790b602c404 132,138-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "02757eca0348b2dae91931e5040eb06b2d3153e5",
+  "prompts": {},
+  "logical_commit_id": "02757eca0348b2dae91931e5040eb06b2d3153e5",
+  "sessions": {
+    "s_d738719ff5334e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb72a-6632-7280-9be5-9861e231f831",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    },
+    "s_ea087cf0df620c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb724-d32c-7b20-8209-14c8640df89c",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
