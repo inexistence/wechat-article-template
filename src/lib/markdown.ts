@@ -60,7 +60,7 @@ console.log(content + " × " + layout);
 | 留白 | 清晰、克制 | 通用文章 |
 | 文墨 | 人文、温和 | 随笔与深度文章 |
 | 简报 | 利落、理性 | 科技与知识分享 |
-| 岛屿日志 | 温暖、轻松 | 生活记录与旅行随笔 |
+| 岛屿 | 温暖、轻松 | 生活记录与旅行随笔 |
 
 > 现在，替换这些文字，开始你的文章。`
 
@@ -115,7 +115,7 @@ export const BUILTIN_THEMES: Record<string, ArticleTheme> = {
   },
   island: {
     id: "island",
-    name: "岛屿日志",
+    name: "岛屿",
     description: "暖纸 · 手作",
     accent: "#4f9f70",
     secondary: "#f7cd67",
