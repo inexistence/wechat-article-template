@@ -17,11 +17,21 @@ import {
   X,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { AlertDialog, DropdownMenu } from "radix-ui"
+import { DropdownMenu } from "radix-ui"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type * as React from "react"
 import { toast } from "sonner"
 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/animate-ui/components/radix/alert-dialog"
 import { Button } from "@/components/animate-ui/components/buttons/button"
 import {
   Sheet,
@@ -293,6 +303,7 @@ export default function App() {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("visual")
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>(375)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [renamingThemeId, setRenamingThemeId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
   const [deletingTheme, setDeletingTheme] = useState<ArticleTheme | null>(null)
@@ -469,7 +480,6 @@ export default function App() {
   }
 
   const createDocument = () => {
-    if (!window.confirm("新建文章会用默认参考文章重置编辑区，已保存的模板不会受影响。")) return
     setTitle("未命名文章")
     setMarkdown(DEFAULT_MARKDOWN)
   }
@@ -562,34 +572,57 @@ export default function App() {
     <div className="app-shell">
       <Toaster position="top-center" closeButton />
 
-      <AlertDialog.Root
+      <AlertDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+      >
+        <AlertDialogContent className="confirm-dialog-content">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="confirm-dialog-title">
+              新建文章？
+            </AlertDialogTitle>
+            <AlertDialogDescription className="confirm-dialog-description">
+              当前编辑区将恢复为默认参考文章；已保存的模板不会受影响。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="confirm-dialog-actions">
+            <AlertDialogCancel asChild>
+              <Button variant="outline">取消</Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button onClick={createDocument}>新建文章</Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
         open={Boolean(deletingTheme)}
         onOpenChange={(open) => {
           if (!open) setDeletingTheme(null)
         }}
       >
-        <AlertDialog.Portal>
-          <AlertDialog.Overlay className="delete-dialog-overlay" />
-          <AlertDialog.Content className="delete-dialog-content">
-            <AlertDialog.Title className="delete-dialog-title">
+        <AlertDialogContent className="confirm-dialog-content">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="confirm-dialog-title">
               删除这个模板？
-            </AlertDialog.Title>
-            <AlertDialog.Description className="delete-dialog-description">
+            </AlertDialogTitle>
+            <AlertDialogDescription className="confirm-dialog-description">
               “{deletingTheme?.name}”将从当前浏览器永久删除，且无法恢复。
-            </AlertDialog.Description>
-            <div className="delete-dialog-actions">
-              <AlertDialog.Cancel asChild>
-                <Button variant="outline">取消</Button>
-              </AlertDialog.Cancel>
-              <AlertDialog.Action asChild>
-                <Button variant="destructive" onClick={deleteCustomTheme}>
-                  删除模板
-                </Button>
-              </AlertDialog.Action>
-            </div>
-          </AlertDialog.Content>
-        </AlertDialog.Portal>
-      </AlertDialog.Root>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="confirm-dialog-actions">
+            <AlertDialogCancel asChild>
+              <Button variant="outline">取消</Button>
+            </AlertDialogCancel>
+            <AlertDialogAction asChild>
+              <Button variant="destructive" onClick={deleteCustomTheme}>
+                删除模板
+              </Button>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <header className="app-header">
         <a className="wordmark" href="#" aria-label="排版间首页">
@@ -627,7 +660,7 @@ export default function App() {
                 hoverScale={1.02}
                 tapScale={0.96}
                 aria-label="新建文章"
-                onClick={createDocument}
+                onClick={() => setCreateDialogOpen(true)}
               >
                 <FilePlus2 />
               </Button>
