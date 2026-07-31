@@ -94,8 +94,10 @@ function parseInline(source: string) {
   )
   value = value.replace(
     /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
-    (_, alt: string, url: string) =>
-      stash(`<img src="${safeUrl(url)}" alt="${escapeHtml(alt)}" />`),
+    (_, alt: string, url: string, title?: string) =>
+      stash(
+        `<img src="${safeUrl(url)}" alt="${escapeHtml(alt)}"${title ? ` title="${escapeHtml(title)}"` : ""} />`,
+      ),
   )
   value = value.replace(
     /\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
@@ -1045,8 +1047,13 @@ function standaloneImages(element: Element) {
   return containsOtherContent ? [] : images
 }
 
-function groupScrollableImages(root: HTMLElement, doc: Document) {
+function groupScrollableImages(
+  root: HTMLElement,
+  doc: Document,
+  tokens: RenderTokens,
+) {
   let candidates: { container: Element; images: Element[] }[] = []
+  const galleries = new Set<Element>()
 
   const flush = () => {
     const images = candidates.flatMap((candidate) => candidate.images)
@@ -1055,18 +1062,38 @@ function groupScrollableImages(root: HTMLElement, doc: Document) {
       return
     }
 
-    const wrapper = doc.createElement("section")
-    wrapper.setAttribute(
+    const group = doc.createElement("section")
+    group.setAttribute("style", "margin:1.8em 0")
+
+    const hint = doc.createElement("section")
+    hint.setAttribute(
       "style",
-      "margin:1.8em 0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;font-size:0;line-height:0",
+      `display:flex;align-items:center;justify-content:space-between;margin:0 0 9px;color:${tokens.colors.text};font-family:${tokens.typography.body};font-size:${tokens.typography.codeSize}px;line-height:1.4;letter-spacing:0.02em;opacity:0.58`,
     )
-    candidates[0].container.before(wrapper)
+    const hintText = doc.createElement("span")
+    hintText.textContent = `左右滑动查看 · 共 ${images.length} 张`
+    const arrow = doc.createElement("span")
+    arrow.textContent = "→"
+    arrow.setAttribute(
+      "style",
+      "display:inline-block;margin-left:12px;font-size:1.15em;line-height:1",
+    )
+    hint.append(hintText, arrow)
+
+    const scroller = doc.createElement("section")
+    scroller.setAttribute(
+      "style",
+      "margin:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;font-size:0;line-height:0",
+    )
+    galleries.add(scroller)
+    candidates[0].container.before(group)
+    group.append(hint, scroller)
     images.forEach((image, index) => {
       appendInlineStyle(
         image,
         `display:inline-block;width:88%;max-width:88%;height:auto;margin:0 ${index === images.length - 1 ? "0" : "12px"} 0 0;vertical-align:top;box-sizing:border-box;white-space:normal`,
       )
-      wrapper.append(image)
+      scroller.append(image)
     })
     candidates.forEach(({ container }) => {
       if (container.tagName !== "IMG") container.remove()
@@ -1083,13 +1110,85 @@ function groupScrollableImages(root: HTMLElement, doc: Document) {
     candidates.push({ container: element, images })
   })
   flush()
+  return galleries
+}
+
+function getImageCaption(image: Element) {
+  return (
+    image.getAttribute("title")?.trim() || image.getAttribute("alt")?.trim() || ""
+  )
+}
+
+function applyImageCaptions(
+  images: Set<Element>,
+  galleries: Set<Element>,
+  doc: Document,
+  settings: ArticleLayoutSettings,
+  tokens: RenderTokens,
+) {
+  if (!settings.showImageCaptions) return
+
+  const captionStyle = [
+    "display:block",
+    "margin:0",
+    "padding:0",
+    `color:${tokens.colors.text}`,
+    "opacity:0.62",
+    `font-size:${settings.imageCaptionSize}px`,
+    "font-weight:400",
+    "font-style:normal",
+    "line-height:1.65",
+    "letter-spacing:0.02em",
+    `text-align:${settings.imageCaptionAlign}`,
+    "text-indent:0",
+    "white-space:normal",
+    "word-break:break-word",
+  ].join(";")
+
+  images.forEach((image) => {
+    const captionText = getImageCaption(image)
+    if (!captionText) return
+
+    const caption = doc.createElement("span")
+    caption.textContent = captionText
+    caption.setAttribute("style", captionStyle)
+
+    const gallery = galleries.has(image.parentElement as Element)
+      ? image.parentElement
+      : null
+    if (gallery) {
+      const galleryImages = Array.from(gallery.children).filter(
+        (child) => child.tagName === "IMG",
+      )
+      const imageIndex = galleryImages.indexOf(image)
+      const frame = doc.createElement("section")
+      frame.setAttribute(
+        "style",
+        `display:inline-block;width:88%;max-width:88%;margin:0 ${imageIndex === galleryImages.length - 1 ? "0" : "12px"} 0 0;vertical-align:top;box-sizing:border-box;white-space:normal`,
+      )
+      image.before(frame)
+      frame.append(image, caption)
+      appendInlineStyle(
+        image,
+        "display:block;width:100%;max-width:100%;height:auto;margin:0 0 8px;vertical-align:top;box-sizing:border-box",
+      )
+      return
+    }
+
+    appendInlineStyle(image, "margin-bottom:8px")
+    image.after(caption)
+  })
 }
 
 function applyArticleLayoutSettings(
   root: HTMLElement,
   doc: Document,
   settings: ArticleLayoutSettings,
+  tokens: RenderTokens,
 ) {
+  const captionableImages = new Set(
+    Array.from(root.children).flatMap(standaloneImages),
+  )
   root.querySelectorAll("p").forEach((paragraph) => {
     appendInlineStyle(
       paragraph,
@@ -1165,9 +1264,11 @@ function applyArticleLayoutSettings(
         : "width:auto",
     )
   })
-  if (settings.imageLayout === "scroll") {
-    groupScrollableImages(root, doc)
-  }
+  const galleries =
+    settings.imageLayout === "scroll"
+      ? groupScrollableImages(root, doc, tokens)
+      : new Set<Element>()
+  applyImageCaptions(captionableImages, galleries, doc, settings, tokens)
 }
 
 export function getArticleStyles(theme: ArticleTheme) {
@@ -1244,7 +1345,7 @@ export function inlineDocument(
   })
 
   renderer.decorate({ doc, root, styles, tokens })
-  applyArticleLayoutSettings(root, doc, settings)
+  applyArticleLayoutSettings(root, doc, settings, tokens)
   root
     .querySelectorAll("pre")
     .forEach((node) => node.removeAttribute("data-language"))

@@ -7,6 +7,7 @@ export type ParagraphAlign = "left" | "justify"
 export type ParagraphSpacing = "compact" | "standard" | "relaxed"
 export type ImageWidth = "natural" | "full"
 export type ImageLayout = "stack" | "scroll"
+export type ImageCaptionAlign = "left" | "center"
 
 export type ArticleLayoutSettings = {
   tableOverflow: ContentOverflow
@@ -16,6 +17,9 @@ export type ArticleLayoutSettings = {
   paragraphSpacing: ParagraphSpacing
   imageLayout: ImageLayout
   imageWidth: ImageWidth
+  showImageCaptions: boolean
+  imageCaptionAlign: ImageCaptionAlign
+  imageCaptionSize: number
 }
 
 export const DEFAULT_ARTICLE_LAYOUT_SETTINGS: ArticleLayoutSettings = {
@@ -26,6 +30,9 @@ export const DEFAULT_ARTICLE_LAYOUT_SETTINGS: ArticleLayoutSettings = {
   paragraphSpacing: "standard",
   imageLayout: "stack",
   imageWidth: "natural",
+  showImageCaptions: true,
+  imageCaptionAlign: "center",
+  imageCaptionSize: 12,
 }
 
 export type ArticleTheme = {
