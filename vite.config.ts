@@ -4,6 +4,7 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "vite"
 
 export default defineConfig({
+  base: "/wechat-article-template/",
   plugins: [react(), tailwindcss()],
   resolve: {
     alias: {
