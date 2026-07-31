@@ -469,7 +469,9 @@ function buildIslandStyles(theme: ArticleTheme) {
 
 function buildJuyaStyles(theme: ArticleTheme) {
   const family =
-    'Optima,"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif'
+    theme.fontFamily === "sans"
+      ? 'Optima,"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif'
+      : fontStack(theme)
   const mono =
     '"Operator Mono",Consolas,Monaco,Menlo,"SFMono-Regular",monospace'
   const contentMargin = Math.max(10, theme.spacing)
