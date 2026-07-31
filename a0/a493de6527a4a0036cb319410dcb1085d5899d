@@ -1,0 +1,36 @@
+README.md
+  s_9cba0513a3df14::t_3f0b9e71cb21a6 35,40-45
+scripts/verify-theme-contract.mjs
+  s_ea087cf0df620c::t_20ef7b1247182a 54,284-285,322-339,391-396,398,400-403,406,409-413,417-436
+src/App.tsx
+  s_9cba0513a3df14::t_9ed0ddaaf6d663 96-102,104-106,171-180,1357-1415
+src/lib/markdown.ts
+  s_ea087cf0df620c::t_579994fcc633de 97-100,1050-1054,1056,1065-1084,1086,1088-1090,1096,1113-1180,1187,1189-1191,1267-1271,1348
+src/lib/theme.ts
+  s_9cba0513a3df14::t_10284e955308e7 10,20-22,33-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "a0a493de6527a4a0036cb319410dcb1085d5899d",
+  "prompts": {},
+  "logical_commit_id": "a0a493de6527a4a0036cb319410dcb1085d5899d",
+  "sessions": {
+    "s_9cba0513a3df14": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb73a-2e93-7551-9015-c117bbd76776",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    },
+    "s_ea087cf0df620c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb724-d32c-7b20-8209-14c8640df89c",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
