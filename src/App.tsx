@@ -190,22 +190,23 @@ function ThemeThumbnail({ theme }: { theme: ArticleTheme }) {
     <span
       className={cn(
         "theme-thumbnail",
-        theme.renderer === "island-log" && "theme-thumbnail--island",
-        theme.renderer === "juya-daily" && "theme-thumbnail--juya",
+        theme.renderer && `theme-thumbnail--${theme.renderer}`,
       )}
       style={
         {
-          "--thumb-paper": theme.paper,
-          "--thumb-text": theme.text,
-          "--thumb-accent": theme.accent,
+          "--thumbnail-paper": theme.paper,
+          "--thumbnail-text": theme.text,
+          "--thumbnail-accent": theme.accent,
+          "--thumbnail-quote": theme.quote,
+          "--thumbnail-secondary": theme.secondary || theme.accent,
         } as React.CSSProperties
       }
       aria-hidden="true"
     >
-      <i />
-      <b />
-      <em />
-      <small />
+      <span className="theme-thumbnail__marker" />
+      <span className="theme-thumbnail__title" />
+      <span className="theme-thumbnail__body" />
+      <span className="theme-thumbnail__footer" />
     </span>
   )
 }
