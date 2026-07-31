@@ -945,6 +945,14 @@ textarea {
   height: 100%;
   overflow: auto;
   padding: 10px clamp(14px, 3vw, 38px) 52px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.preview-canvas::-webkit-scrollbar,
+.settings-mobile-preview::-webkit-scrollbar,
+.article-preview *::-webkit-scrollbar {
+  display: none;
 }
 
 .preview-width {
@@ -977,6 +985,11 @@ textarea {
 
 .article-preview.is-dark-preview {
   background: #191919;
+}
+
+.article-preview * {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .html-output {
@@ -1543,6 +1556,8 @@ textarea {
   overflow: auto;
   padding: 16px 14px 48px;
   background: oklch(0.955 0 0);
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .settings-mobile-preview .article-preview {

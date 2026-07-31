@@ -237,6 +237,9 @@ try {
       pre.querySelector("code"),
       `renderer "${rendererId}" code block has no code element`,
     )
+    if (code.querySelectorAll("br").length !== 1) {
+      fail(`renderer "${rendererId}" did not preserve code line breaks`)
+    }
     const codeFrame =
       contract.output.codeBlock.frame === "terminal"
         ? requireElement(
@@ -372,8 +375,15 @@ try {
           fail(`renderer "${rendererId}" ignored wrap overflow settings`)
         }
       } else {
+        const blockCode = requireElement(
+          pre.querySelector("code"),
+          `renderer "${rendererId}" scrollable code block has no code element`,
+        )
         if (
-          !styleOf(pre).includes("overflow-x:auto;white-space:pre") ||
+          !styleOf(pre).includes("overflow-x:auto") ||
+          !styleOf(pre).includes("white-space:nowrap!important") ||
+          !styleOf(blockCode).includes("width:max-content") ||
+          !styleOf(blockCode).includes("white-space:nowrap!important") ||
           !styleOf(table).includes("width:max-content") ||
           !styleOf(cell).includes("white-space:nowrap") ||
           !styleOf(table.parentElement).includes("overflow-x:auto")

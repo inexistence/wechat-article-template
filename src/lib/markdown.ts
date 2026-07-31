@@ -751,9 +751,21 @@ function highlightGeekCode(code: Element, doc: Document, language: string) {
 
 function preserveCodeWhitespace(node: Node) {
   if (node.nodeType === Node.TEXT_NODE) {
-    node.textContent = (node.textContent || "")
-      .replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0")
-      .replaceAll(" ", "\u00a0")
+    const lines = (node.textContent || "").split("\n")
+    const fragment = node.ownerDocument?.createDocumentFragment()
+    if (!fragment) return
+
+    lines.forEach((line, index) => {
+      if (index > 0) fragment.append(node.ownerDocument!.createElement("br"))
+      fragment.append(
+        node.ownerDocument!.createTextNode(
+          line
+            .replaceAll("\t", "\u00a0\u00a0\u00a0\u00a0")
+            .replaceAll(" ", "\u00a0"),
+        ),
+      )
+    })
+    node.parentNode?.replaceChild(fragment, node)
     return
   }
   Array.from(node.childNodes).forEach(preserveCodeWhitespace)
@@ -1267,11 +1279,24 @@ function applyArticleLayoutSettings(
   })
 
   root.querySelectorAll("pre").forEach((pre) => {
+    const code = pre.querySelector("code")
+    if (settings.codeOverflow === "scroll") {
+      appendInlineStyle(
+        pre,
+        "overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;white-space:nowrap!important;overflow-wrap:normal!important;word-break:keep-all!important",
+      )
+      if (code) {
+        appendInlineStyle(
+          code,
+          "display:block;width:max-content;min-width:100%;white-space:nowrap!important;overflow-wrap:normal!important;word-break:keep-all!important",
+        )
+      }
+      return
+    }
+
     appendInlineStyle(
       pre,
-      settings.codeOverflow === "scroll"
-        ? "overflow-x:auto;white-space:pre;overflow-wrap:normal;word-break:normal"
-        : "overflow-x:hidden;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal",
+      "overflow-x:hidden;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal",
     )
   })
 
