@@ -1,0 +1,22 @@
+src/App.tsx
+  s_9d36a98eb672b6::t_e3b3a51fd03c84 871,878
+src/index.css
+  s_9d36a98eb672b6::t_c9a192b5b65f8d 211-214,1580-1589,1594
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "7339de3f6612e433230aafc1e855b56b37f6969e",
+  "prompts": {},
+  "logical_commit_id": "7339de3f6612e433230aafc1e855b56b37f6969e",
+  "sessions": {
+    "s_9d36a98eb672b6": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb7dc-c6e4-76d3-bf92-4c43dc034f11",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
