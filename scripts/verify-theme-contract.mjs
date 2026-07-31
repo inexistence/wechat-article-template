@@ -51,7 +51,7 @@ const message = "hello";
 console.log(message);
 \`\`\`
 
-![Preview one](https://example.com/preview-1.png)
+![Preview one](https://example.com/preview-1.png "Figure one")
 
 ![Preview two](https://example.com/preview-2.png)
 
@@ -281,6 +281,8 @@ try {
     firstLineIndent: true,
     paragraphSpacing: "relaxed",
     imageWidth: "full",
+    imageCaptionAlign: "left",
+    imageCaptionSize: 14,
   }
   for (const [rendererId, theme] of Object.entries(themesByRenderer)) {
     for (const overflow of ["wrap", "scroll"]) {
@@ -316,6 +318,24 @@ try {
       )
       if (!styleOf(image).includes("width:100%;max-width:100%")) {
         fail(`renderer "${rendererId}" ignored the full-width image setting`)
+      }
+      const caption = requireElement(
+        image.nextElementSibling,
+        `renderer "${rendererId}" produced no image caption`,
+      )
+      if (
+        caption.textContent !== "Figure one" ||
+        !styleOf(caption).includes("font-size:14px") ||
+        !styleOf(caption).includes("text-align:left")
+      ) {
+        fail(`renderer "${rendererId}" ignored image caption settings`)
+      }
+      const fallbackCaption = requireElement(
+        root.querySelectorAll("img")[1]?.nextElementSibling,
+        `renderer "${rendererId}" produced no alt fallback caption`,
+      )
+      if (fallbackCaption.textContent !== "Preview two") {
+        fail(`renderer "${rendererId}" did not use alt as the caption fallback`)
       }
 
       const pre = requireElement(
@@ -368,18 +388,46 @@ try {
     if (images.length !== 3) {
       fail(`renderer "${rendererId}" image gallery lost images`)
     }
+    const imageFrames = images.map((image) =>
+      requireElement(
+        image.parentElement,
+        `renderer "${rendererId}" gallery image has no frame`,
+      ),
+    )
     const gallery = requireElement(
-      images[0].parentElement,
+      imageFrames[0].parentElement,
       `renderer "${rendererId}" image gallery has no container`,
     )
     if (
-      images.some((image) => image.parentElement !== gallery) ||
+      imageFrames.some((frame) => frame.parentElement !== gallery) ||
       !styleOf(gallery).includes("overflow-x:auto") ||
       !styleOf(gallery).includes("white-space:nowrap") ||
-      images.some((image) => !styleOf(image).includes("width:88%"))
+      imageFrames.some((frame) => !styleOf(frame).includes("width:88%")) ||
+      images.some((image) => !styleOf(image).includes("width:100%")) ||
+      images.some((image) => !image.nextElementSibling?.textContent?.trim())
     ) {
       fail(`renderer "${rendererId}" ignored horizontal image layout`)
     }
+  }
+
+  const captionsHiddenOutput = inlineDocument(
+    fixtureHtml,
+    BUILTIN_THEMES.clean,
+    {
+      ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+      showImageCaptions: false,
+    },
+  )
+  const captionsHiddenDocument = new DOMParser().parseFromString(
+    `<html><body>${captionsHiddenOutput}</body></html>`,
+    "text/html",
+  )
+  const captionsHiddenImage = requireElement(
+    captionsHiddenDocument.body.querySelector("img"),
+    "caption visibility fixture produced no image",
+  )
+  if (captionsHiddenImage.nextElementSibling) {
+    fail("hidden image captions still render visible content")
   }
 
   console.log(

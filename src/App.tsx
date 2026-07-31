@@ -93,8 +93,17 @@ const PREVIEW_WIDTHS: { value: PreviewWidth; label: string }[] = [
 ]
 const COLOR_THEME_CONTROLS = ["accent", "text", "paper"] as const
 
-type PersistedLayoutSettings = Omit<ArticleLayoutSettings, "imageLayout"> & {
+type PersistedLayoutSettings = Omit<
+  ArticleLayoutSettings,
+  | "imageLayout"
+  | "showImageCaptions"
+  | "imageCaptionAlign"
+  | "imageCaptionSize"
+> & {
   imageLayout?: ArticleLayoutSettings["imageLayout"]
+  showImageCaptions?: ArticleLayoutSettings["showImageCaptions"]
+  imageCaptionAlign?: ArticleLayoutSettings["imageCaptionAlign"]
+  imageCaptionSize?: ArticleLayoutSettings["imageCaptionSize"]
 }
 
 type SavedDocument = {
@@ -159,7 +168,16 @@ function isArticleLayoutSettings(
     (value.imageLayout === undefined ||
       value.imageLayout === "stack" ||
       value.imageLayout === "scroll") &&
-    (value.imageWidth === "natural" || value.imageWidth === "full")
+    (value.imageWidth === "natural" || value.imageWidth === "full") &&
+    (value.showImageCaptions === undefined ||
+      typeof value.showImageCaptions === "boolean") &&
+    (value.imageCaptionAlign === undefined ||
+      value.imageCaptionAlign === "left" ||
+      value.imageCaptionAlign === "center") &&
+    (value.imageCaptionSize === undefined ||
+      (isFiniteNumber(value.imageCaptionSize) &&
+        value.imageCaptionSize >= 10 &&
+        value.imageCaptionSize <= 16))
   )
 }
 
@@ -1336,6 +1354,65 @@ export default function App() {
                   >
                     连续两张以上图片会组成横滑图组，单张图片保持原样。
                   </motion.p>
+                )}
+              </AnimatePresence>
+              <div className="setting-dependent">
+                <SettingChoice
+                  label="图片说明"
+                  value={layoutSettings.showImageCaptions ? "show" : "hide"}
+                  options={[
+                    { value: "show", label: "显示图注" },
+                    { value: "hide", label: "隐藏图注" },
+                  ]}
+                  onChange={(value) =>
+                    setLayoutSettings((settings) => ({
+                      ...settings,
+                      showImageCaptions: value === "show",
+                    }))
+                  }
+                />
+              </div>
+              <AnimatePresence initial={false}>
+                {layoutSettings.showImageCaptions && (
+                  <motion.div
+                    key="image-caption-settings"
+                    className="setting-dependent"
+                    initial={{ opacity: 0, y: -3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -3 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <SettingSlider
+                      label="图注字号"
+                      value={layoutSettings.imageCaptionSize}
+                      display={`${layoutSettings.imageCaptionSize}px`}
+                      min={10}
+                      max={16}
+                      onChange={(imageCaptionSize) =>
+                        setLayoutSettings((settings) => ({
+                          ...settings,
+                          imageCaptionSize,
+                        }))
+                      }
+                    />
+                    <SettingChoice
+                      label="图注对齐"
+                      value={layoutSettings.imageCaptionAlign}
+                      options={[
+                        { value: "left", label: "左对齐" },
+                        { value: "center", label: "居中" },
+                      ]}
+                      onChange={(imageCaptionAlign) =>
+                        setLayoutSettings((settings) => ({
+                          ...settings,
+                          imageCaptionAlign,
+                        }))
+                      }
+                    />
+                    <p className="setting-hint">
+                      优先使用图片 title，没有时使用 alt；文字留空则不显示。
+                    </p>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </section>
