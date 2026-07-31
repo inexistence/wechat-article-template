@@ -11,10 +11,13 @@ import {
   List,
   MessageSquareQuote,
   MoreHorizontal,
+  PencilLine,
   Settings2,
+  Trash2,
+  X,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
-import { DropdownMenu } from "radix-ui"
+import { AlertDialog, DropdownMenu } from "radix-ui"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type * as React from "react"
 import { toast } from "sonner"
@@ -280,6 +283,9 @@ export default function App() {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("visual")
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>(375)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [renamingThemeId, setRenamingThemeId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState("")
+  const [deletingTheme, setDeletingTheme] = useState<ArticleTheme | null>(null)
   const [saveState, setSaveState] = useState<SaveState>("saved")
   const editorRef = useRef<HTMLTextAreaElement>(null)
 
@@ -449,6 +455,18 @@ export default function App() {
     setMarkdown(DEFAULT_MARKDOWN)
   }
 
+  const persistCustomThemes = (themes: ArticleTheme[]) => {
+    try {
+      localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(themes))
+      return true
+    } catch {
+      toast.error("模板保存失败", {
+        description: "浏览器存储空间不足或不可用。",
+      })
+      return false
+    }
+  }
+
   const saveCustomTheme = () => {
     const id = `custom-${Date.now()}`
     const next: ArticleTheme = {
@@ -458,19 +476,62 @@ export default function App() {
       description: "自定义",
     }
     const list = [...customThemes, next]
-    try {
-      localStorage.setItem(CUSTOM_THEMES_KEY, JSON.stringify(list))
-    } catch {
-      toast.error("模板保存失败", {
-        description: "浏览器存储空间不足或不可用。",
-      })
-      return
-    }
+    if (!persistCustomThemes(list)) return
     setCustomThemes(list)
     setSelectedThemeId(id)
     setActiveTheme(next)
     setSettingsOpen(false)
     toast.success("模板已保存")
+  }
+
+  const startRenamingTheme = (theme: ArticleTheme) => {
+    setRenamingThemeId(theme.id)
+    setRenameValue(theme.name)
+  }
+
+  const cancelRenamingTheme = () => {
+    setRenamingThemeId(null)
+    setRenameValue("")
+  }
+
+  const renameCustomTheme = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!renamingThemeId) return
+
+    const name = renameValue.trim()
+    if (!name) {
+      toast.error("模板名称不能为空")
+      return
+    }
+
+    const list = customThemes.map((theme) =>
+      theme.id === renamingThemeId ? { ...theme, name } : theme,
+    )
+    if (!persistCustomThemes(list)) return
+
+    setCustomThemes(list)
+    if (selectedThemeId === renamingThemeId) {
+      setActiveTheme((theme) => ({ ...theme, name }))
+    }
+    cancelRenamingTheme()
+    toast.success("模板已重命名")
+  }
+
+  const deleteCustomTheme = () => {
+    if (!deletingTheme) return
+
+    const list = customThemes.filter((item) => item.id !== deletingTheme.id)
+    if (!persistCustomThemes(list)) return
+
+    setCustomThemes(list)
+    if (selectedThemeId === deletingTheme.id) {
+      const fallback = structuredClone(BUILTIN_THEMES.clean)
+      setSelectedThemeId(fallback.id)
+      setActiveTheme(fallback)
+    }
+    if (renamingThemeId === deletingTheme.id) cancelRenamingTheme()
+    setDeletingTheme(null)
+    toast.success("模板已删除")
   }
 
   const resetTheme = () => {
@@ -481,6 +542,35 @@ export default function App() {
   return (
     <div className="app-shell">
       <Toaster position="top-center" closeButton />
+
+      <AlertDialog.Root
+        open={Boolean(deletingTheme)}
+        onOpenChange={(open) => {
+          if (!open) setDeletingTheme(null)
+        }}
+      >
+        <AlertDialog.Portal>
+          <AlertDialog.Overlay className="delete-dialog-overlay" />
+          <AlertDialog.Content className="delete-dialog-content">
+            <AlertDialog.Title className="delete-dialog-title">
+              删除这个模板？
+            </AlertDialog.Title>
+            <AlertDialog.Description className="delete-dialog-description">
+              “{deletingTheme?.name}”将从当前浏览器永久删除，且无法恢复。
+            </AlertDialog.Description>
+            <div className="delete-dialog-actions">
+              <AlertDialog.Cancel asChild>
+                <Button variant="outline">取消</Button>
+              </AlertDialog.Cancel>
+              <AlertDialog.Action asChild>
+                <Button variant="destructive" onClick={deleteCustomTheme}>
+                  删除模板
+                </Button>
+              </AlertDialog.Action>
+            </div>
+          </AlertDialog.Content>
+        </AlertDialog.Portal>
+      </AlertDialog.Root>
 
       <header className="app-header">
         <a className="wordmark" href="#" aria-label="排版间首页">
@@ -572,27 +662,123 @@ export default function App() {
           <div className="theme-list">
             {Object.values(allThemes).map((theme) => {
               const selected = theme.id === selectedThemeId
+              const isCustom = theme.id.startsWith("custom-")
+              const isRenaming = theme.id === renamingThemeId
               return (
-                <button
+                <div
                   key={theme.id}
-                  type="button"
-                  className={cn("theme-option", selected && "is-selected")}
-                  onClick={() => selectTheme(theme.id)}
-                >
-                  {selected && (
-                    <motion.span
-                      layoutId="theme-selection"
-                      className="theme-selection"
-                      transition={{ type: "spring", stiffness: 360, damping: 34 }}
-                    />
+                  className={cn(
+                    "theme-item",
+                    isCustom && "is-custom",
+                    isRenaming && "is-renaming",
                   )}
-                  <ThemeThumbnail theme={theme} />
-                  <span className="theme-copy">
-                    <strong>{theme.name}</strong>
-                    <small>{theme.description}</small>
-                  </span>
-                  <Check className="theme-check" />
-                </button>
+                >
+                  <button
+                    type="button"
+                    className={cn(
+                      "theme-option",
+                      selected && "is-selected",
+                      isCustom && "has-actions",
+                    )}
+                    onClick={() => selectTheme(theme.id)}
+                  >
+                    {selected && (
+                      <motion.span
+                        layoutId="theme-selection"
+                        className="theme-selection"
+                        transition={{ type: "spring", stiffness: 360, damping: 34 }}
+                      />
+                    )}
+                    <ThemeThumbnail theme={theme} />
+                    <span className="theme-copy">
+                      <strong>{theme.name}</strong>
+                      <small>{theme.description}</small>
+                    </span>
+                    <Check className="theme-check" />
+                  </button>
+
+                  {isCustom && (
+                    <DropdownMenu.Root>
+                      <DropdownMenu.Trigger asChild>
+                        <button
+                          type="button"
+                          className="theme-menu-trigger"
+                          aria-label={`管理模板“${theme.name}”`}
+                        >
+                          <MoreHorizontal />
+                        </button>
+                      </DropdownMenu.Trigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.Content
+                          className="theme-menu-content"
+                          side="bottom"
+                          align="end"
+                          sideOffset={4}
+                          collisionPadding={10}
+                        >
+                          <DropdownMenu.Item
+                            className="theme-menu-item"
+                            onSelect={() => startRenamingTheme(theme)}
+                          >
+                            <PencilLine />
+                            重命名
+                          </DropdownMenu.Item>
+                          <DropdownMenu.Separator className="theme-menu-separator" />
+                          <DropdownMenu.Item
+                            className="theme-menu-item is-destructive"
+                            onSelect={() => setDeletingTheme(theme)}
+                          >
+                            <Trash2 />
+                            删除
+                          </DropdownMenu.Item>
+                        </DropdownMenu.Content>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Root>
+                  )}
+
+                  <AnimatePresence initial={false}>
+                    {isRenaming && (
+                      <motion.form
+                        className="theme-rename-form"
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                        onSubmit={renameCustomTheme}
+                        onKeyDown={(event) => {
+                          if (event.key === "Escape") {
+                            cancelRenamingTheme()
+                          }
+                        }}
+                      >
+                        <Input
+                          value={renameValue}
+                          onChange={(event) => setRenameValue(event.target.value)}
+                          maxLength={30}
+                          autoFocus
+                          aria-label="新的模板名称"
+                          className="theme-rename-input"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label="取消重命名"
+                          onClick={cancelRenamingTheme}
+                        >
+                          <X />
+                        </Button>
+                        <Button
+                          type="submit"
+                          size="icon-sm"
+                          aria-label="保存模板名称"
+                        >
+                          <Check />
+                        </Button>
+                      </motion.form>
+                    )}
+                  </AnimatePresence>
+                </div>
               )
             })}
           </div>
@@ -768,7 +954,7 @@ export default function App() {
                 <div className="preview-canvas">
                   <div className="preview-width">
                     <i />
-                    <span>375</span>
+                    <span>{previewWidth}</span>
                     <i />
                   </div>
                   <AnimatePresence mode="wait">

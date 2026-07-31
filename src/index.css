@@ -83,6 +83,68 @@ textarea {
   background: var(--background);
 }
 
+.delete-dialog-overlay {
+  position: fixed;
+  z-index: 80;
+  inset: 0;
+  background: oklch(0.16 0 0 / 0.38);
+  animation: delete-dialog-fade-in 150ms ease-out;
+}
+
+.delete-dialog-content {
+  width: min(360px, calc(100vw - 32px));
+  position: fixed;
+  z-index: 81;
+  top: 50%;
+  left: 50%;
+  padding: 22px;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+  background: var(--popover);
+  border-radius: 10px;
+  box-shadow:
+    0 8px 24px oklch(0.16 0 0 / 0.12),
+    0 24px 70px oklch(0.16 0 0 / 0.16);
+  transform: translate(-50%, -50%);
+  animation: delete-dialog-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.delete-dialog-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.delete-dialog-description {
+  margin: 9px 0 22px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.delete-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.delete-dialog-actions button {
+  min-width: 82px;
+}
+
+@keyframes delete-dialog-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes delete-dialog-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 7px)) scale(0.985);
+  }
+}
+
 .app-header {
   height: 60px;
   display: grid;
@@ -268,6 +330,10 @@ textarea {
   padding: 10px;
 }
 
+.theme-item {
+  position: relative;
+}
+
 .theme-option {
   width: 100%;
   min-height: 68px;
@@ -284,6 +350,10 @@ textarea {
   border-radius: 7px;
   cursor: pointer;
   text-align: left;
+}
+
+.theme-option.has-actions {
+  grid-template-columns: 45px 1fr 42px;
 }
 
 .theme-option:hover {
@@ -416,6 +486,141 @@ textarea {
 .theme-option.is-selected .theme-check {
   opacity: 1;
   transform: scale(1);
+}
+
+.theme-option.has-actions .theme-check {
+  justify-self: start;
+}
+
+.theme-menu-trigger {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  position: absolute;
+  z-index: 2;
+  top: 19px;
+  right: 7px;
+  padding: 0;
+  border: 0;
+  color: var(--muted-foreground);
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(2px);
+  transition:
+    color 150ms ease,
+    background-color 150ms ease,
+    opacity 150ms ease,
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-menu-trigger svg {
+  width: 15px;
+  height: 15px;
+}
+
+.theme-item:hover .theme-menu-trigger,
+.theme-menu-trigger:focus-visible,
+.theme-menu-trigger[data-state="open"] {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.theme-menu-trigger:hover,
+.theme-menu-trigger[data-state="open"] {
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.theme-menu-trigger:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 1px;
+}
+
+.theme-menu-content {
+  min-width: 116px;
+  z-index: 70;
+  padding: 5px;
+  border: 1px solid var(--border);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  border-radius: 7px;
+  box-shadow:
+    0 2px 6px oklch(0.2 0 0 / 0.07),
+    0 12px 30px oklch(0.2 0 0 / 0.1);
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  animation: theme-menu-in 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-menu-item {
+  min-height: 31px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+  border-radius: 5px;
+  outline: none;
+  cursor: default;
+  font-size: 10px;
+  user-select: none;
+}
+
+.theme-menu-item svg {
+  width: 13px;
+  height: 13px;
+  color: var(--muted-foreground);
+}
+
+.theme-menu-item[data-highlighted] {
+  background: var(--secondary);
+}
+
+.theme-menu-item.is-destructive {
+  color: var(--destructive);
+}
+
+.theme-menu-item.is-destructive svg {
+  color: currentColor;
+}
+
+.theme-menu-separator {
+  height: 1px;
+  margin: 4px;
+  background: var(--border);
+}
+
+.theme-rename-form {
+  display: grid;
+  grid-template-columns: 1fr 30px 30px;
+  align-items: center;
+  gap: 4px;
+  margin: 3px 4px 7px 56px;
+}
+
+.theme-rename-input {
+  height: 30px;
+  min-width: 0;
+  padding-inline: 8px;
+  font-size: 10px;
+}
+
+.theme-rename-form button {
+  width: 30px;
+  height: 30px;
+}
+
+.theme-rename-form svg {
+  width: 13px;
+  height: 13px;
+}
+
+@keyframes theme-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(-2px);
+  }
 }
 
 .adjust-row {
@@ -584,6 +789,67 @@ textarea {
   height: 12px;
 }
 
+.preview-options-menu {
+  z-index: 60;
+  width: 168px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow:
+    0 4px 12px oklch(0.2 0 0 / 0.08),
+    0 16px 36px oklch(0.2 0 0 / 0.1);
+  transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  animation: preview-menu-in 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.preview-options-label {
+  padding: 7px 9px 5px;
+  color: var(--muted-foreground);
+  font-size: 9px;
+  font-weight: 600;
+}
+
+.preview-option {
+  display: grid;
+  grid-template-columns: 1fr auto 16px;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 8px 8px 9px;
+  border-radius: 5px;
+  outline: none;
+  cursor: default;
+  font-size: 10px;
+  user-select: none;
+}
+
+.preview-option[data-highlighted] {
+  background: var(--accent);
+}
+
+.preview-option small {
+  color: var(--muted-foreground);
+  font-size: 9px;
+}
+
+.preview-option-check {
+  display: grid;
+  place-items: center;
+}
+
+.preview-option-check svg {
+  width: 12px;
+  height: 12px;
+}
+
+@keyframes preview-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.98);
+  }
+}
+
 .preview-tab-contents,
 .preview-tab-content {
   min-height: 0;
@@ -601,7 +867,7 @@ textarea {
 }
 
 .preview-width {
-  width: min(100%, 420px);
+  width: min(100%, var(--preview-width, 375px));
   display: flex;
   align-items: center;
   gap: 8px;
@@ -618,7 +884,7 @@ textarea {
 
 .article-preview,
 .html-output {
-  width: min(100%, 420px);
+  width: min(100%, var(--preview-width, 375px));
   min-height: calc(100svh - 204px);
   margin: 0 auto;
   overflow: hidden;
@@ -799,8 +1065,16 @@ textarea {
     padding-inline: 6px;
   }
 
+  .theme-option.has-actions {
+    grid-template-columns: 41px 1fr 40px;
+  }
+
   .theme-thumbnail {
     width: 41px;
+  }
+
+  .theme-rename-form {
+    margin-left: 51px;
   }
 }
 
@@ -876,6 +1150,11 @@ textarea {
 
   .themes-panel {
     overflow: auto;
+  }
+
+  .theme-menu-trigger {
+    opacity: 1;
+    transform: none;
   }
 
   .theme-list {
