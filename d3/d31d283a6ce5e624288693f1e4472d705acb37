@@ -1,0 +1,20 @@
+src/index.css
+  s_84517fa3334e57::t_eec59f277a85de 401-428
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d3d31d283a6ce5e624288693f1e4472d705acb37",
+  "prompts": {},
+  "logical_commit_id": "d3d31d283a6ce5e624288693f1e4472d705acb37",
+  "sessions": {
+    "s_84517fa3334e57": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb6df-a664-7261-b05f-a043cb15afd1",
+        "model": "unknown"
+      },
+      "human_author": "Codex Sites <sites@openai.com>"
+    }
+  }
+}
