@@ -1,0 +1,20 @@
+src/lib/markdown.ts
+  s_c08af6294aa49e::t_30b3c39a5ed1f8 23,27-29,33,35,37,39,41-44,48,50,52-54,56,58-70,73-75,78
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "783b49675704ab71f4fbcaa219834646e98a2ba7",
+  "prompts": {},
+  "logical_commit_id": "783b49675704ab71f4fbcaa219834646e98a2ba7",
+  "sessions": {
+    "s_c08af6294aa49e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb6c7-5d0a-79f0-80b0-f1e42fb1db22",
+        "model": "unknown"
+      },
+      "human_author": "Codex Sites <sites@openai.com>"
+    }
+  }
+}
