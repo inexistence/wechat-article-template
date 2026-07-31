@@ -1,0 +1,22 @@
+src/lib/markdown.ts
+  s_ea087cf0df620c::t_4e5b3ebe9c36f5 481-514,538-571,701-708,990,1000
+src/lib/theme.ts
+  s_ea087cf0df620c::t_17c507870afd42 105,160
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "d0366ae470b208a9db9c34c045d616de62aac3d1",
+  "prompts": {},
+  "logical_commit_id": "d0366ae470b208a9db9c34c045d616de62aac3d1",
+  "sessions": {
+    "s_ea087cf0df620c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb724-d32c-7b20-8209-14c8640df89c",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
