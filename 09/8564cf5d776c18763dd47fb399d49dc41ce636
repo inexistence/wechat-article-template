@@ -1,0 +1,28 @@
+README.md
+  s_ea087cf0df620c::t_8b7839ad7d7b6f 33
+scripts/verify-theme-contract.mjs
+  s_ea087cf0df620c::t_bce95927d19afe 67,108-123
+src/index.css
+  s_ea087cf0df620c::t_4be9834b7e0581 501-526
+src/lib/markdown.ts
+  s_ea087cf0df620c::t_ed0eb27d8cf67c 57,431-467,472-480,483,506-560,562-582,584-602,615-618,631-641,665,831-912,931-939,1002-1006,1015-1017
+src/lib/theme.ts
+  s_ea087cf0df620c::t_90f9bf047e5379 3,107-120,136-140,166,171,180,326,331,340,459-476
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "098564cf5d776c18763dd47fb399d49dc41ce636",
+  "prompts": {},
+  "logical_commit_id": "098564cf5d776c18763dd47fb399d49dc41ce636",
+  "sessions": {
+    "s_ea087cf0df620c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb724-d32c-7b20-8209-14c8640df89c",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
