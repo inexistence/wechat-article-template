@@ -1,0 +1,24 @@
+src/App.tsx
+  s_c08af6294aa49e::t_dbf88201ca601a 63,1070
+src/index.css
+  s_c08af6294aa49e::t_7cefcb02ce36b3 447
+src/lib/markdown.ts
+  s_c08af6294aa49e::t_ca79bfb0677b72 467
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3d08d20ddd4c74e9c36a648004c7a7af871570fe",
+  "prompts": {},
+  "logical_commit_id": "3d08d20ddd4c74e9c36a648004c7a7af871570fe",
+  "sessions": {
+    "s_c08af6294aa49e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb6c7-5d0a-79f0-80b0-f1e42fb1db22",
+        "model": "unknown"
+      },
+      "human_author": "Codex Sites <sites@openai.com>"
+    }
+  }
+}
