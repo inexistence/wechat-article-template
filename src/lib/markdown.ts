@@ -578,7 +578,7 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
       leaf.textContent = "\u00a0"
       leaf.setAttribute(
         "style",
-        `display:inline-block;width:0.62em;height:0.43em;margin-right:0.38em;border-radius:100% 0 100% 0;background:${theme.accent};font-size:0;line-height:0;transform:rotate(-20deg);vertical-align:0.08em`,
+        `display:inline-block;width:0.62em;height:0.43em;margin-right:0.38em;border-radius:100% 0 100% 0;background:${theme.accent};color:transparent;line-height:0;overflow:hidden;transform:rotate(-20deg);vertical-align:0.08em`,
       )
       leaf.setAttribute("aria-hidden", "true")
       heading.prepend(leaf)

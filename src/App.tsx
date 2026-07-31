@@ -433,9 +433,9 @@ export default function App() {
   }
 
   const createDocument = () => {
-    if (!window.confirm("新建文章会清空当前编辑区，已保存的模板不会受影响。")) return
+    if (!window.confirm("新建文章会用默认参考文章重置编辑区，已保存的模板不会受影响。")) return
     setTitle("未命名文章")
-    setMarkdown("# 新文章\n\n从这里开始写作。")
+    setMarkdown(DEFAULT_MARKDOWN)
   }
 
   const saveCustomTheme = () => {
