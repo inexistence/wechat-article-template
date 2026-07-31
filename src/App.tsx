@@ -14,6 +14,7 @@ import {
   Settings2,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
+import { DropdownMenu } from "radix-ui"
 import { useEffect, useMemo, useRef, useState } from "react"
 import type * as React from "react"
 import { toast } from "sonner"
@@ -56,11 +57,18 @@ import {
 
 const DOCUMENT_KEY = "paibanjian-react-document-v3"
 const CUSTOM_THEMES_KEY = "paibanjian-react-themes-v3"
-const THEME_VERSION = 6
+const THEME_VERSION = 7
 
 type WorkspaceView = "write" | "preview" | "style"
 type PreviewMode = "visual" | "html"
+type PreviewWidth = 320 | 375 | 420
 type SaveState = "saved" | "saving" | "error"
+
+const PREVIEW_WIDTHS: { value: PreviewWidth; label: string }[] = [
+  { value: 320, label: "紧凑" },
+  { value: 375, label: "标准" },
+  { value: 420, label: "宽屏" },
+]
 
 type SavedDocument = {
   markdown: string
@@ -99,7 +107,9 @@ function isArticleTheme(value: unknown): value is ArticleTheme {
     (value.headingStyle === "bar" ||
       value.headingStyle === "underline" ||
       value.headingStyle === "label") &&
-    (value.fontFamily === "sans" || value.fontFamily === "serif") &&
+    (value.fontFamily === "sans" ||
+      value.fontFamily === "serif" ||
+      value.fontFamily === "rounded") &&
     (value.secondary === undefined || typeof value.secondary === "string") &&
     (value.renderer === undefined || value.renderer === "island-log")
   )
@@ -268,6 +278,7 @@ export default function App() {
   const [customThemes, setCustomThemes] = useState<ArticleTheme[]>(loadCustomThemes)
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("write")
   const [previewMode, setPreviewMode] = useState<PreviewMode>("visual")
+  const [previewWidth, setPreviewWidth] = useState<PreviewWidth>(375)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [saveState, setSaveState] = useState<SaveState>("saved")
   const editorRef = useRef<HTMLTextAreaElement>(null)
@@ -679,22 +690,59 @@ export default function App() {
         <section className="preview-panel workspace-panel" aria-label="公众号预览">
           <SectionHeader
             title="公众号预览"
-            meta="375 px"
+            meta={`${previewWidth} px`}
             actions={
-              <Tooltip delayDuration={350}>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    hoverScale={1.02}
-                    tapScale={0.96}
-                    aria-label="更多预览选项"
+              <DropdownMenu.Root>
+                <Tooltip delayDuration={350}>
+                  <TooltipTrigger asChild>
+                    <DropdownMenu.Trigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        hoverScale={1.02}
+                        tapScale={0.96}
+                        aria-label="更多预览选项"
+                      >
+                        <MoreHorizontal />
+                      </Button>
+                    </DropdownMenu.Trigger>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">预览选项</TooltipContent>
+                </Tooltip>
+                <DropdownMenu.Portal>
+                  <DropdownMenu.Content
+                    className="preview-options-menu"
+                    side="bottom"
+                    align="end"
+                    sideOffset={7}
+                    collisionPadding={10}
                   >
-                    <MoreHorizontal />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">预览选项</TooltipContent>
-              </Tooltip>
+                    <DropdownMenu.Label className="preview-options-label">
+                      预览宽度
+                    </DropdownMenu.Label>
+                    <DropdownMenu.RadioGroup
+                      value={String(previewWidth)}
+                      onValueChange={(value) =>
+                        setPreviewWidth(Number(value) as PreviewWidth)
+                      }
+                    >
+                      {PREVIEW_WIDTHS.map((option) => (
+                        <DropdownMenu.RadioItem
+                          key={option.value}
+                          value={String(option.value)}
+                          className="preview-option"
+                        >
+                          <span>{option.label}</span>
+                          <small>{option.value} px</small>
+                          <DropdownMenu.ItemIndicator className="preview-option-check">
+                            <Check />
+                          </DropdownMenu.ItemIndicator>
+                        </DropdownMenu.RadioItem>
+                      ))}
+                    </DropdownMenu.RadioGroup>
+                  </DropdownMenu.Content>
+                </DropdownMenu.Portal>
+              </DropdownMenu.Root>
             }
           />
 
@@ -702,6 +750,11 @@ export default function App() {
             value={previewMode}
             onValueChange={(value) => setPreviewMode(value as PreviewMode)}
             className="preview-tabs"
+            style={
+              {
+                "--preview-width": `${previewWidth}px`,
+              } as React.CSSProperties
+            }
           >
             <TabsList className="preview-tab-list">
               <TabsTrigger value="visual">预览</TabsTrigger>
@@ -823,7 +876,7 @@ export default function App() {
               <section className="setting-section">
                 <h3>模板结构</h3>
                 <p className="structure-note">
-                  叶片标题、手写引用和点状分隔是这套模板的固定结构。颜色、字号和阅读参数仍可调整。
+                  叶片标题、手写引用和点状分隔是这套模板的固定结构。颜色、字体、字号和阅读参数仍可调整。
                 </p>
               </section>
             ) : (
@@ -858,11 +911,12 @@ export default function App() {
 
             <section className="setting-section">
               <h3>字体气质</h3>
-              <div className="choice-grid two">
+              <div className="choice-grid">
                 {(
                   [
                     ["sans", "现代"],
                     ["serif", "人文"],
+                    ["rounded", "圆润"],
                   ] as [FontFamily, string][]
                 ).map(([value, label]) => (
                   <Button

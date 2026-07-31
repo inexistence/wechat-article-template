@@ -1,5 +1,5 @@
 export type HeadingStyle = "bar" | "underline" | "label"
-export type FontFamily = "sans" | "serif"
+export type FontFamily = "sans" | "serif" | "rounded"
 
 export type ArticleTheme = {
   id: string
@@ -125,7 +125,7 @@ export const BUILTIN_THEMES: Record<string, ArticleTheme> = {
     spacing: 26,
     radius: 18,
     headingStyle: "bar",
-    fontFamily: "sans",
+    fontFamily: "rounded",
     renderer: "island-log",
   },
 }
@@ -335,9 +335,13 @@ export function markdownToHtml(markdown: string) {
 }
 
 function fontStack(theme: ArticleTheme) {
-  return theme.fontFamily === "serif"
-    ? '"Songti SC","STSong","Noto Serif CJK SC",serif'
-    : '"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif'
+  if (theme.fontFamily === "serif") {
+    return '"Songti SC","STSong","Noto Serif CJK SC",serif'
+  }
+  if (theme.fontFamily === "rounded") {
+    return '"Yuanti SC","STYuanti-SC","YouYuan","Arial Rounded MT Bold","Nunito","PingFang SC","Microsoft YaHei",sans-serif'
+  }
+  return '"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif'
 }
 
 function buildStyles(theme: ArticleTheme) {
@@ -399,11 +403,8 @@ function buildStyles(theme: ArticleTheme) {
 }
 
 function buildIslandStyles(theme: ArticleTheme) {
-  const family =
-    '"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif'
-  const displayFamily =
-    '"Arial Rounded MT Bold","Nunito","PingFang SC","Microsoft YaHei",sans-serif'
-  const secondary = theme.secondary || "#f7cd67"
+  const family = fontStack(theme)
+  const displayFamily = fontStack(theme)
 
   return {
     root: `padding:${theme.spacing + 10}px ${theme.spacing}px 56px;color:${theme.text};background:${theme.paper};font-family:${family};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};word-break:break-word`,
@@ -423,12 +424,12 @@ function buildIslandStyles(theme: ArticleTheme) {
     pre: `margin:1.7em 0;padding:20px 24px;overflow-x:auto;color:#e8d5bc;background:${theme.code};border:1px solid #3d3028;border-radius:20px;font-family:"SFMono-Regular","SF Mono","Fira Code","Cascadia Code",Menlo,Consolas,monospace;font-size:13px;font-weight:600;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;tab-size:4;box-shadow:0 9px 24px rgba(43,33,24,0.1)`,
     inlineCode: `margin:0 3px;padding:2px 5px;color:#8a4d3c;background:#efe3ca;border-radius:7px;font-family:Menlo,Consolas,monospace;font-size:0.88em`,
     img: `display:block;max-width:100%;height:auto;margin:2em auto;border:6px solid ${theme.paper};border-radius:${theme.radius + 6}px;box-shadow:0 12px 30px rgba(76,67,52,0.12)`,
-    table: `width:100%;margin:1.8em 0;border:0!important;border-top:0!important;border-collapse:collapse;border-spacing:0;outline:0;box-shadow:none!important;background:transparent;color:${theme.text};font-size:${theme.fontSize - 2}px;line-height:1.65`,
-    thead: "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:transparent",
-    tbody: "border:0!important;outline:0;box-shadow:none!important;background:transparent",
+    table: `width:100%;margin:0;border:0!important;border-top:0!important;border-collapse:separate;border-spacing:0;table-layout:fixed;outline:0;box-shadow:none!important;background:#f7f3df;color:${theme.text};font-size:${theme.fontSize - 2}px;line-height:1.65`,
+    thead: "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:#f7f3df",
+    tbody: "border:0!important;outline:0;box-shadow:none!important;background:#f7f3df",
     tr: "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:transparent",
-    th: `padding:10px 9px;border:0!important;border-top:0!important;border-bottom:1px solid #d9cdae!important;background:${secondary}55;font-weight:800;text-align:left;box-shadow:none!important`,
-    td: "padding:10px 9px;border:0!important;border-bottom:1px solid #ded2bb!important;text-align:left;box-shadow:none!important",
+    th: `padding:13px 10px;border:0!important;border-top:0!important;border-bottom:1px dashed #e4dac0!important;color:${theme.text};background:transparent;font-weight:800;text-align:left;overflow-wrap:anywhere;box-shadow:none!important`,
+    td: `padding:12px 10px;border:0!important;border-bottom:1px dashed #e8dfc9!important;color:${theme.text};background:transparent;font-weight:500;text-align:left;overflow-wrap:anywhere;box-shadow:none!important`,
   }
 }
 
@@ -573,6 +574,33 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
   root.querySelectorAll("a").forEach((node) => node.setAttribute("target", "_blank"))
 
   if (theme.renderer === "island-log") {
+    root.querySelectorAll("table").forEach((table) => {
+      const wrapper = doc.createElement("section")
+      wrapper.setAttribute(
+        "style",
+        "margin:1.8em 0;padding:5px;overflow:hidden;background:#f7f3df;border-radius:20px;box-sizing:border-box",
+      )
+      wrapper.setAttribute("data-island-table", "true")
+      table.before(wrapper)
+      wrapper.append(table)
+
+      table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
+        row.setAttribute(
+          "style",
+          rowIndex % 2 === 1
+            ? "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:#fffaf0"
+            : styles.tr,
+        )
+      })
+
+      table.querySelectorAll("tbody tr:last-child td").forEach((cell) => {
+        cell.setAttribute(
+          "style",
+          `${styles.td};border-bottom:0!important`,
+        )
+      })
+    })
+
     root.querySelectorAll("h2").forEach((heading) => {
       const leaf = doc.createElement("span")
       leaf.textContent = "\u00a0"
