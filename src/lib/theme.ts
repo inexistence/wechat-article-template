@@ -2,6 +2,28 @@ export type HeadingStyle = "bar" | "underline" | "label"
 export type FontFamily = "sans" | "serif" | "rounded"
 export type ThemeRenderer = "island-log" | "juya-daily" | "geek-manual"
 export type ThemeRendererId = "default" | ThemeRenderer
+export type ContentOverflow = "wrap" | "scroll"
+export type ParagraphAlign = "left" | "justify"
+export type ParagraphSpacing = "compact" | "standard" | "relaxed"
+export type ImageWidth = "natural" | "full"
+
+export type ArticleLayoutSettings = {
+  tableOverflow: ContentOverflow
+  codeOverflow: ContentOverflow
+  paragraphAlign: ParagraphAlign
+  firstLineIndent: boolean
+  paragraphSpacing: ParagraphSpacing
+  imageWidth: ImageWidth
+}
+
+export const DEFAULT_ARTICLE_LAYOUT_SETTINGS: ArticleLayoutSettings = {
+  tableOverflow: "wrap",
+  codeOverflow: "wrap",
+  paragraphAlign: "justify",
+  firstLineIndent: false,
+  paragraphSpacing: "standard",
+  imageWidth: "natural",
+}
 
 export type ArticleTheme = {
   id: string
@@ -44,7 +66,7 @@ export type ThemeCapability = {
 
 export type ThemeOutputContract = {
   table: {
-    container: "none" | "frame" | "scroll"
+    frame: boolean
     backgrounds: "header" | "container" | "cells"
   }
   codeBlock: {
@@ -97,7 +119,7 @@ export const THEME_RENDERER_CONTRACTS = {
     capabilities: DEFAULT_CAPABILITIES,
     output: {
       table: {
-        container: "none",
+        frame: false,
         backgrounds: "header",
       },
       codeBlock: {
@@ -125,7 +147,7 @@ export const THEME_RENDERER_CONTRACTS = {
     },
     output: {
       table: {
-        container: "frame",
+        frame: true,
         backgrounds: "container",
       },
       codeBlock: {
@@ -152,7 +174,7 @@ export const THEME_RENDERER_CONTRACTS = {
     },
     output: {
       table: {
-        container: "frame",
+        frame: true,
         backgrounds: "container",
       },
       codeBlock: {
@@ -181,7 +203,7 @@ export const THEME_RENDERER_CONTRACTS = {
     },
     output: {
       table: {
-        container: "scroll",
+        frame: true,
         backgrounds: "cells",
       },
       codeBlock: {

@@ -64,10 +64,12 @@ import {
 } from "@/lib/markdown"
 import {
   BUILTIN_THEMES,
+  DEFAULT_ARTICLE_LAYOUT_SETTINGS,
   THEME_CONTROL_LABELS,
   canEditThemeControl,
   getThemeRendererContract,
   isThemeRenderer,
+  type ArticleLayoutSettings,
   type ArticleTheme,
   type FontFamily,
   type HeadingStyle,
@@ -96,6 +98,7 @@ type SavedDocument = {
   title: string
   selectedThemeId: string
   activeTheme: ArticleTheme
+  layoutSettings?: ArticleLayoutSettings
   themeVersion?: number
 }
 
@@ -136,6 +139,23 @@ function isArticleTheme(value: unknown): value is ArticleTheme {
   )
 }
 
+function isArticleLayoutSettings(
+  value: unknown,
+): value is ArticleLayoutSettings {
+  if (!isRecord(value)) return false
+
+  return (
+    (value.tableOverflow === "wrap" || value.tableOverflow === "scroll") &&
+    (value.codeOverflow === "wrap" || value.codeOverflow === "scroll") &&
+    (value.paragraphAlign === "left" || value.paragraphAlign === "justify") &&
+    typeof value.firstLineIndent === "boolean" &&
+    (value.paragraphSpacing === "compact" ||
+      value.paragraphSpacing === "standard" ||
+      value.paragraphSpacing === "relaxed") &&
+    (value.imageWidth === "natural" || value.imageWidth === "full")
+  )
+}
+
 function isSavedDocument(value: unknown): value is SavedDocument {
   if (!isRecord(value)) return false
 
@@ -144,8 +164,27 @@ function isSavedDocument(value: unknown): value is SavedDocument {
     typeof value.title === "string" &&
     typeof value.selectedThemeId === "string" &&
     isArticleTheme(value.activeTheme) &&
+    (value.layoutSettings === undefined ||
+      isArticleLayoutSettings(value.layoutSettings)) &&
     (value.themeVersion === undefined || isFiniteNumber(value.themeVersion))
   )
+}
+
+function getInitialLayoutSettings(
+  saved: SavedDocument | null,
+): ArticleLayoutSettings {
+  if (saved?.layoutSettings) return saved.layoutSettings
+
+  const renderer = saved?.activeTheme.renderer
+  return {
+    ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+    tableOverflow: renderer === "geek-manual" ? "scroll" : "wrap",
+    paragraphAlign:
+      renderer === "juya-daily" || renderer === "geek-manual"
+        ? "left"
+        : "justify",
+    paragraphSpacing: renderer === "juya-daily" ? "compact" : "standard",
+  }
 }
 
 function loadCustomThemes(): ArticleTheme[] {
@@ -281,6 +320,39 @@ function SettingSlider({
   )
 }
 
+function SettingChoice<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: T
+  options: readonly { value: T; label: string }[]
+  onChange: (value: T) => void
+}) {
+  return (
+    <div className="setting-choice">
+      <b>{label}</b>
+      <div className={cn("choice-grid", options.length === 2 && "two")}>
+        {options.map((option) => (
+          <Button
+            key={option.value}
+            type="button"
+            variant={value === option.value ? "secondary" : "outline"}
+            aria-pressed={value === option.value}
+            hoverScale={1.015}
+            tapScale={0.98}
+            onClick={() => onChange(option.value)}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function App() {
   const saved = useMemo(loadDocument, [])
   const [markdown, setMarkdown] = useState(saved?.markdown || DEFAULT_MARKDOWN)
@@ -298,6 +370,8 @@ export default function App() {
             BUILTIN_THEMES.clean,
         ),
   )
+  const [layoutSettings, setLayoutSettings] =
+    useState<ArticleLayoutSettings>(() => getInitialLayoutSettings(saved))
   const [customThemes, setCustomThemes] = useState<ArticleTheme[]>(loadCustomThemes)
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("write")
   const [previewMode, setPreviewMode] = useState<PreviewMode>("visual")
@@ -328,8 +402,8 @@ export default function App() {
     canEditThemeControl(themeContract, control)
 
   const finalHtml = useMemo(
-    () => inlineDocument(markdownToHtml(markdown), activeTheme),
-    [markdown, activeTheme],
+    () => inlineDocument(markdownToHtml(markdown), activeTheme, layoutSettings),
+    [markdown, activeTheme, layoutSettings],
   )
 
   const characterCount = useMemo(
@@ -352,6 +426,7 @@ export default function App() {
             title,
             selectedThemeId,
             activeTheme,
+            layoutSettings,
             themeVersion: THEME_VERSION,
           }),
         )
@@ -366,7 +441,7 @@ export default function App() {
       }
     }, 350)
     return () => window.clearTimeout(timer)
-  }, [markdown, title, selectedThemeId, activeTheme])
+  }, [markdown, title, selectedThemeId, activeTheme, layoutSettings])
 
   useEffect(() => {
     const handleShortcut = (event: KeyboardEvent) => {
@@ -482,6 +557,7 @@ export default function App() {
   const createDocument = () => {
     setTitle("未命名文章")
     setMarkdown(DEFAULT_MARKDOWN)
+    setLayoutSettings(structuredClone(DEFAULT_ARTICLE_LAYOUT_SETTINGS))
   }
 
   const persistCustomThemes = (themes: ArticleTheme[]) => {
@@ -563,9 +639,10 @@ export default function App() {
     toast.success("模板已删除")
   }
 
-  const resetTheme = () => {
+  const resetSettings = () => {
     const original = allThemes[selectedThemeId] || BUILTIN_THEMES.clean
     setActiveTheme(structuredClone(original))
+    setLayoutSettings(structuredClone(DEFAULT_ARTICLE_LAYOUT_SETTINGS))
   }
 
   return (
@@ -1046,9 +1123,9 @@ export default function App() {
           transition={{ type: "spring", stiffness: 240, damping: 30 }}
         >
           <SheetHeader className="sheet-heading">
-            <SheetTitle>调整模板</SheetTitle>
+            <SheetTitle>排版设置</SheetTitle>
             <SheetDescription>
-              所有设置会实时反映在预览中。
+              模板外观与文章版式会实时反映在预览中。
             </SheetDescription>
           </SheetHeader>
 
@@ -1118,6 +1195,99 @@ export default function App() {
                   onChange={(value) => updateTheme("radius", value)}
                 />
               )}
+            </section>
+
+            <section className="setting-section">
+              <h3>正文版式</h3>
+              <SettingChoice
+                label="正文对齐"
+                value={layoutSettings.paragraphAlign}
+                options={[
+                  { value: "left", label: "左对齐" },
+                  { value: "justify", label: "两端对齐" },
+                ]}
+                onChange={(paragraphAlign) =>
+                  setLayoutSettings((settings) => ({
+                    ...settings,
+                    paragraphAlign,
+                  }))
+                }
+              />
+              <SettingChoice
+                label="首行缩进"
+                value={layoutSettings.firstLineIndent ? "indent" : "none"}
+                options={[
+                  { value: "none", label: "不缩进" },
+                  { value: "indent", label: "缩进 2 字" },
+                ]}
+                onChange={(value) =>
+                  setLayoutSettings((settings) => ({
+                    ...settings,
+                    firstLineIndent: value === "indent",
+                  }))
+                }
+              />
+              <SettingChoice
+                label="段落间距"
+                value={layoutSettings.paragraphSpacing}
+                options={[
+                  { value: "compact", label: "紧凑" },
+                  { value: "standard", label: "标准" },
+                  { value: "relaxed", label: "宽松" },
+                ]}
+                onChange={(paragraphSpacing) =>
+                  setLayoutSettings((settings) => ({
+                    ...settings,
+                    paragraphSpacing,
+                  }))
+                }
+              />
+            </section>
+
+            <section className="setting-section">
+              <h3>内容适配</h3>
+              <SettingChoice
+                label="代码块长行"
+                value={layoutSettings.codeOverflow}
+                options={[
+                  { value: "wrap", label: "自动换行" },
+                  { value: "scroll", label: "横向滚动" },
+                ]}
+                onChange={(codeOverflow) =>
+                  setLayoutSettings((settings) => ({
+                    ...settings,
+                    codeOverflow,
+                  }))
+                }
+              />
+              <SettingChoice
+                label="宽表格"
+                value={layoutSettings.tableOverflow}
+                options={[
+                  { value: "wrap", label: "单元格换行" },
+                  { value: "scroll", label: "横向滚动" },
+                ]}
+                onChange={(tableOverflow) =>
+                  setLayoutSettings((settings) => ({
+                    ...settings,
+                    tableOverflow,
+                  }))
+                }
+              />
+              <SettingChoice
+                label="图片宽度"
+                value={layoutSettings.imageWidth}
+                options={[
+                  { value: "natural", label: "适应原图" },
+                  { value: "full", label: "撑满正文" },
+                ]}
+                onChange={(imageWidth) =>
+                  setLayoutSettings((settings) => ({
+                    ...settings,
+                    imageWidth,
+                  }))
+                }
+              />
             </section>
 
             {themeContract.structureNote && (
@@ -1195,9 +1365,9 @@ export default function App() {
               variant="outline"
               hoverScale={1.015}
               tapScale={0.98}
-              onClick={resetTheme}
+              onClick={resetSettings}
             >
-              恢复模板
+              恢复默认
             </Button>
             <Button
               hoverScale={1.015}

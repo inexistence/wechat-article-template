@@ -1081,6 +1081,18 @@ textarea {
   font-size: 9px;
 }
 
+.setting-choice + .setting-choice {
+  margin-top: 18px;
+}
+
+.setting-choice > b {
+  display: block;
+  margin-bottom: 9px;
+  color: var(--foreground);
+  font-size: 10px;
+  font-weight: 550;
+}
+
 .choice-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

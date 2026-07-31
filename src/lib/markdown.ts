@@ -1,6 +1,8 @@
 import {
+  DEFAULT_ARTICLE_LAYOUT_SETTINGS,
   getThemeRendererId,
   resolveThemeTokens,
+  type ArticleLayoutSettings,
   type ArticleTheme,
   type RenderTokens,
   type ThemeRendererId,
@@ -1010,6 +1012,102 @@ const RENDERER_DEFINITIONS: Record<ThemeRendererId, RendererDefinition> = {
   },
 }
 
+const PARAGRAPH_GAPS: Record<
+  ArticleLayoutSettings["paragraphSpacing"],
+  string
+> = {
+  compact: "0",
+  standard: "1.25em",
+  relaxed: "1.9em",
+}
+
+function appendInlineStyle(element: Element, style: string) {
+  const current = element.getAttribute("style") || ""
+  element.setAttribute("style", current ? `${current};${style}` : style)
+}
+
+function applyArticleLayoutSettings(
+  root: HTMLElement,
+  doc: Document,
+  settings: ArticleLayoutSettings,
+) {
+  root.querySelectorAll("p").forEach((paragraph) => {
+    appendInlineStyle(
+      paragraph,
+      [
+        `text-align:${settings.paragraphAlign}`,
+        `text-indent:${settings.firstLineIndent ? "2em" : "0"}`,
+        `margin-bottom:${PARAGRAPH_GAPS[settings.paragraphSpacing]}`,
+      ].join(";"),
+    )
+  })
+
+  root.querySelectorAll("pre").forEach((pre) => {
+    appendInlineStyle(
+      pre,
+      settings.codeOverflow === "scroll"
+        ? "overflow-x:auto;white-space:pre;overflow-wrap:normal;word-break:normal"
+        : "overflow-x:hidden;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal",
+    )
+  })
+
+  root.querySelectorAll("table").forEach((table) => {
+    const tableParent = table.parentElement
+    let container = tableParent
+    let createdScrollContainer = false
+    if (settings.tableOverflow === "scroll" && tableParent === root) {
+      container = doc.createElement("section")
+      container.setAttribute("style", "margin:1.8em 0")
+      table.before(container)
+      container.append(table)
+      createdScrollContainer = true
+    }
+
+    if (settings.tableOverflow === "scroll") {
+      if (container) {
+        appendInlineStyle(
+          container,
+          "overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch",
+        )
+      }
+      appendInlineStyle(
+        table,
+        `${createdScrollContainer ? "margin:0;" : ""}width:max-content;min-width:100%;max-width:none;table-layout:auto`,
+      )
+      table.querySelectorAll("th,td").forEach((cell) => {
+        appendInlineStyle(
+          cell,
+          "white-space:nowrap;word-break:keep-all;overflow-wrap:normal",
+        )
+      })
+      return
+    }
+
+    if (container && container !== root) {
+      appendInlineStyle(container, "overflow-x:hidden")
+    }
+    appendInlineStyle(
+      table,
+      "width:100%;min-width:0;max-width:100%;table-layout:fixed",
+    )
+    table.querySelectorAll("th,td").forEach((cell) => {
+      appendInlineStyle(
+        cell,
+        "white-space:normal;word-break:break-word;overflow-wrap:anywhere",
+      )
+    })
+  })
+
+  root.querySelectorAll("img").forEach((image) => {
+    appendInlineStyle(
+      image,
+      settings.imageWidth === "full"
+        ? "width:100%;max-width:100%;box-sizing:border-box"
+        : "width:auto",
+    )
+  })
+}
+
 export function getArticleStyles(theme: ArticleTheme) {
   const tokens = resolveThemeTokens(theme)
   return RENDERER_DEFINITIONS[getThemeRendererId(theme)].buildStyles(
@@ -1018,7 +1116,11 @@ export function getArticleStyles(theme: ArticleTheme) {
   )
 }
 
-export function inlineDocument(html: string, theme: ArticleTheme) {
+export function inlineDocument(
+  html: string,
+  theme: ArticleTheme,
+  settings: ArticleLayoutSettings = DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+) {
   const parser = new DOMParser()
   const doc = parser.parseFromString(`<section>${html}</section>`, "text/html")
   const root = doc.querySelector("section")!
@@ -1080,6 +1182,7 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
   })
 
   renderer.decorate({ doc, root, styles, tokens })
+  applyArticleLayoutSettings(root, doc, settings)
   root
     .querySelectorAll("pre")
     .forEach((node) => node.removeAttribute("data-language"))

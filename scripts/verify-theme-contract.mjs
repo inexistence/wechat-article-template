@@ -85,6 +85,7 @@ try {
   const markdownModule = await server.ssrLoadModule("/src/lib/markdown.ts")
   const {
     BUILTIN_THEMES,
+    DEFAULT_ARTICLE_LAYOUT_SETTINGS,
     THEME_CONTROLS,
     THEME_RENDERER_CONTRACTS,
     getThemeRendererContract,
@@ -172,25 +173,11 @@ try {
       `renderer "${rendererId}" table has no container`,
     )
     const tableContainerStyle = styleOf(tableContainer)
-    if (
-      contract.output.table.container === "none" &&
-      tableContainer !== root
-    ) {
-      fail(`renderer "${rendererId}" must render an unwrapped table`)
+    if (contract.output.table.frame && tableContainer === root) {
+      fail(`renderer "${rendererId}" table must use a frame`)
     }
-    if (
-      contract.output.table.container === "frame" &&
-      (tableContainer === root ||
-        !tableContainerStyle.includes("overflow:hidden"))
-    ) {
-      fail(`renderer "${rendererId}" table must use a framed container`)
-    }
-    if (
-      contract.output.table.container === "scroll" &&
-      (tableContainer === root ||
-        !tableContainerStyle.includes("overflow-x:auto"))
-    ) {
-      fail(`renderer "${rendererId}" table must scroll horizontally`)
+    if (!contract.output.table.frame && tableContainer !== root) {
+      fail(`renderer "${rendererId}" table must remain unframed`)
     }
 
     const tableHeader = requireElement(
@@ -284,8 +271,84 @@ try {
     }
   }
 
+  const layoutFixture = {
+    ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+    paragraphAlign: "justify",
+    firstLineIndent: true,
+    paragraphSpacing: "relaxed",
+    imageWidth: "full",
+  }
+  for (const [rendererId, theme] of Object.entries(themesByRenderer)) {
+    for (const overflow of ["wrap", "scroll"]) {
+      const output = inlineDocument(fixtureHtml, theme, {
+        ...layoutFixture,
+        tableOverflow: overflow,
+        codeOverflow: overflow,
+      })
+      const document = new DOMParser().parseFromString(
+        `<html><body>${output}</body></html>`,
+        "text/html",
+      )
+      const root = requireElement(
+        document.body.firstElementChild,
+        `renderer "${rendererId}" produced no layout fixture root`,
+      )
+      const paragraph = requireElement(
+        root.querySelector("p"),
+        `renderer "${rendererId}" produced no paragraph`,
+      )
+      const paragraphStyle = styleOf(paragraph)
+      if (
+        !paragraphStyle.includes("text-align:justify") ||
+        !paragraphStyle.includes("text-indent:2em") ||
+        !paragraphStyle.includes("margin-bottom:1.9em")
+      ) {
+        fail(`renderer "${rendererId}" ignored paragraph layout settings`)
+      }
+
+      const image = requireElement(
+        root.querySelector("img"),
+        `renderer "${rendererId}" produced no layout fixture image`,
+      )
+      if (!styleOf(image).includes("width:100%;max-width:100%")) {
+        fail(`renderer "${rendererId}" ignored the full-width image setting`)
+      }
+
+      const pre = requireElement(
+        root.querySelector("pre"),
+        `renderer "${rendererId}" produced no layout fixture code block`,
+      )
+      const table = requireElement(
+        root.querySelector("table"),
+        `renderer "${rendererId}" produced no layout fixture table`,
+      )
+      const cell = requireElement(
+        table.querySelector("td"),
+        `renderer "${rendererId}" produced no layout fixture table cell`,
+      )
+      if (overflow === "wrap") {
+        if (
+          !styleOf(pre).includes("overflow-x:hidden;white-space:pre-wrap") ||
+          !styleOf(table).includes("table-layout:fixed") ||
+          !styleOf(cell).includes("white-space:normal")
+        ) {
+          fail(`renderer "${rendererId}" ignored wrap overflow settings`)
+        }
+      } else {
+        if (
+          !styleOf(pre).includes("overflow-x:auto;white-space:pre") ||
+          !styleOf(table).includes("width:max-content") ||
+          !styleOf(cell).includes("white-space:nowrap") ||
+          !styleOf(table.parentElement).includes("overflow-x:auto")
+        ) {
+          fail(`renderer "${rendererId}" ignored scroll overflow settings`)
+        }
+      }
+    }
+  }
+
   console.log(
-    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls + output invariants`,
+    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls + output and layout invariants`,
   )
 } finally {
   await server.close()
