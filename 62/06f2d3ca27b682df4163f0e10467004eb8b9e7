@@ -1,0 +1,30 @@
+README.md
+  s_84517fa3334e57::t_612399ca17f016 40-49
+package.json
+  s_84517fa3334e57::t_9b78665584f02c 9-10
+scripts/verify-theme-contract.mjs
+  s_84517fa3334e57::t_9cc8a5723553bf 1-114
+src/App.tsx
+  s_84517fa3334e57::t_dc2717fc484b9d 54-60,64-66,82,125,308-311,313-317,1016-1034,1038-1080,1083,1087,1090-1092,1122-1150
+src/lib/markdown.ts
+  s_84517fa3334e57::t_c18a243a72e406 1-7,270-295,298-302,305-307,313-317,322,329-331,336-337,339-342,345-354,358-359,363-367,369-375,378-388,390-391,395-400,402-408,411-421,424-426,514-721,728-730,756,759-761,766,772-774,778-780,782
+src/lib/theme.ts
+  s_84517fa3334e57::t_b33b6b1d205269 1-436
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "6206f2d3ca27b682df4163f0e10467004eb8b9e7",
+  "prompts": {},
+  "logical_commit_id": "6206f2d3ca27b682df4163f0e10467004eb8b9e7",
+  "sessions": {
+    "s_84517fa3334e57": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb6df-a664-7261-b05f-a043cb15afd1",
+        "model": "unknown"
+      },
+      "human_author": "Codex Sites <sites@openai.com>"
+    }
+  }
+}
