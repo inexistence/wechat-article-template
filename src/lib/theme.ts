@@ -102,7 +102,7 @@ export const THEME_RENDERER_CONTRACTS = {
       },
       codeBlock: {
         frame: "plain",
-        syntaxHighlighting: false,
+        syntaxHighlighting: true,
         languageLabel: false,
         shadow: false,
       },
@@ -157,7 +157,7 @@ export const THEME_RENDERER_CONTRACTS = {
       },
       codeBlock: {
         frame: "plain",
-        syntaxHighlighting: false,
+        syntaxHighlighting: true,
         languageLabel: false,
         shadow: false,
       },

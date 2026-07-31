@@ -478,6 +478,40 @@ type CodePattern = {
   fontStyle?: "italic"
 }
 
+const DEFAULT_CODE_PATTERNS: readonly CodePattern[] = [
+  {
+    pattern: /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
+    color: "#89939d",
+    fontStyle: "italic",
+  },
+  {
+    pattern: /`(?:\\[\s\S]|[^`])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,
+    color: "#a8cc8c",
+  },
+  {
+    pattern:
+      /\b(?:import|from|as|export|default|const|let|var|function|return|if|else|for|while|switch|case|break|continue|try|catch|throw|finally|new|typeof|instanceof|async|await|type|interface|class|extends|def|lambda|yield|in|is|and|or|not|with|match|fn|mut|pub|use|impl|struct|enum|package|func|defer|go|select)\b/g,
+    color: "#c7a0e8",
+    fontWeight: 700,
+  },
+  {
+    pattern: /\b(?:true|false|null|undefined|void|None|True|False|NaN|Infinity)\b/g,
+    color: "#d4a6c8",
+  },
+  { pattern: /\b[A-Z][A-Za-z0-9_]*\b/g, color: "#82c7d9" },
+  {
+    pattern: /\b[a-zA-Z_$][\w$]*(?=\s*\()/g,
+    color: "#74b8e6",
+    fontWeight: 650,
+  },
+  { pattern: /\b[a-zA-Z_$][\w$]*(?=\s*=)/g, color: "#e7c77c" },
+  { pattern: /\b(?:0x[\da-f]+|\d+(?:\.\d+)?)\b/gi, color: "#d4a6c8" },
+  {
+    pattern: /=>|===|!==|==|!=|>=|<=|&&|\|\||\?\?|[+\-*/%=<>!?:]/g,
+    color: "#bbc3cc",
+  },
+]
+
 const ISLAND_CODE_PATTERNS: readonly CodePattern[] = [
   { pattern: /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, color: "#6b5e50" },
   {
@@ -501,6 +535,40 @@ const ISLAND_CODE_PATTERNS: readonly CodePattern[] = [
   { pattern: /\b[a-zA-Z_$][\w$]*(?=\s*=)/g, color: "#e8c87a" },
   { pattern: /\b(?:0x[\da-f]+|\d+(?:\.\d+)?)\b/gi, color: "#a8d4a0" },
   { pattern: /=>|===|!==|==|!=|>=|<=|&&|\|\||\?\?|[+\-*/%=<>!?:]/g, color: "#d4b896" },
+]
+
+const JUYA_CODE_PATTERNS: readonly CodePattern[] = [
+  {
+    pattern: /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
+    color: "#8d8b84",
+    fontStyle: "italic",
+  },
+  {
+    pattern: /`(?:\\[\s\S]|[^`])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,
+    color: "#4f7a52",
+  },
+  {
+    pattern:
+      /\b(?:import|from|as|export|default|const|let|var|function|return|if|else|for|while|switch|case|break|continue|try|catch|throw|finally|new|typeof|instanceof|async|await|type|interface|class|extends|def|lambda|yield|in|is|and|or|not|with|match|fn|mut|pub|use|impl|struct|enum|package|func|defer|go|select)\b/g,
+    color: "#9a4f78",
+    fontWeight: 700,
+  },
+  {
+    pattern: /\b(?:true|false|null|undefined|void|None|True|False|NaN|Infinity)\b/g,
+    color: "#a35d3d",
+  },
+  { pattern: /\b[A-Z][A-Za-z0-9_]*\b/g, color: "#376f8a" },
+  {
+    pattern: /\b[a-zA-Z_$][\w$]*(?=\s*\()/g,
+    color: "#315f8c",
+    fontWeight: 650,
+  },
+  { pattern: /\b[a-zA-Z_$][\w$]*(?=\s*=)/g, color: "#9b6b35" },
+  { pattern: /\b(?:0x[\da-f]+|\d+(?:\.\d+)?)\b/gi, color: "#9a5f3f" },
+  {
+    pattern: /=>|===|!==|==|!=|>=|<=|&&|\|\||\?\?|[+\-*/%=<>!?:]/g,
+    color: "#6e6b64",
+  },
 ]
 
 const GEEK_CODE_PATTERNS: readonly CodePattern[] = [
@@ -630,6 +698,14 @@ function highlightCode(
 
 function highlightIslandCode(code: Element, doc: Document, _language: string) {
   highlightCode(code, doc, ISLAND_CODE_PATTERNS)
+}
+
+function highlightDefaultCode(code: Element, doc: Document, _language: string) {
+  highlightCode(code, doc, DEFAULT_CODE_PATTERNS)
+}
+
+function highlightJuyaCode(code: Element, doc: Document, _language: string) {
+  highlightCode(code, doc, JUYA_CODE_PATTERNS)
 }
 
 function highlightGeekCode(code: Element, doc: Document, language: string) {
@@ -911,6 +987,7 @@ const RENDERER_DEFINITIONS: Record<ThemeRendererId, RendererDefinition> = {
   default: {
     buildStyles: buildDefaultStyles,
     decorate: decorateDefaultDocument,
+    prepareCode: highlightDefaultCode,
   },
   "island-log": {
     buildStyles: buildIslandStyles,
@@ -920,6 +997,7 @@ const RENDERER_DEFINITIONS: Record<ThemeRendererId, RendererDefinition> = {
   "juya-daily": {
     buildStyles: buildJuyaStyles,
     decorate: decorateJuyaDocument,
+    prepareCode: highlightJuyaCode,
     inlineCodeStyle: (node, styles) =>
       node.closest("h1,h2,h3,h4,li") && styles.inlineLabelCode
         ? styles.inlineLabelCode
