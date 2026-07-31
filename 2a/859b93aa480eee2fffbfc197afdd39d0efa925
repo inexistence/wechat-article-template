@@ -1,0 +1,30 @@
+README.md
+  s_ea087cf0df620c::t_07d11b04d63a90 44,48
+package-lock.json
+  s_ea087cf0df620c::t_2746355eb42f07 10,28,3098-3111,3194-3235,3279-3330,3332-3350,3370-3382,3522-3633,3937-3961,4068-4084,4471-4477
+package.json
+  s_ea087cf0df620c::t_fb2352bda82c20 30
+scripts/verify-theme-contract.mjs
+  s_ea087cf0df620c::t_7e30f875879ed6 3,7-10,28-39,42-55,92,140-164,166-168,170-284,288
+src/components/ui/sonner.tsx
+  s_ea087cf0df620c::t_62697a7118f156 13
+src/lib/theme.ts
+  s_ea087cf0df620c::t_bfb49966e29c59 45-60,67,98-112,126-140,153-167,181-195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "2a859b93aa480eee2fffbfc197afdd39d0efa925",
+  "prompts": {},
+  "logical_commit_id": "2a859b93aa480eee2fffbfc197afdd39d0efa925",
+  "sessions": {
+    "s_ea087cf0df620c": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb724-d32c-7b20-8209-14c8640df89c",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
