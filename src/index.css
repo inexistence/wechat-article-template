@@ -280,6 +280,17 @@ textarea {
   gap: 4px;
 }
 
+.preview-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.dark-preview-toggle.is-active {
+  color: oklch(0.42 0.13 255);
+  background: oklch(0.92 0.045 255);
+}
+
 .themes-panel {
   display: flex;
   flex-direction: column;
@@ -962,6 +973,10 @@ textarea {
   box-shadow:
     0 1px 2px oklch(0.2 0 0 / 0.04),
     0 12px 30px oklch(0.2 0 0 / 0.07);
+}
+
+.article-preview.is-dark-preview {
+  background: #191919;
 }
 
 .html-output {

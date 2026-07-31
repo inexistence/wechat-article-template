@@ -15,6 +15,7 @@
     "clsx": "^2.1.1",
     "lucide-react": "^0.536.0",
     "motion": "^12.23.12",
+    "mp-darkmode": "^1.2.2",
     "radix-ui": "^1.6.7",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",

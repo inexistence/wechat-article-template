@@ -12,14 +12,16 @@ import {
   List,
   MessageSquareQuote,
   MoreHorizontal,
+  Moon,
   PencilLine,
   Settings2,
+  Sun,
   Trash2,
   X,
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { DropdownMenu } from "radix-ui"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import type * as React from "react"
 import { toast } from "sonner"
 
@@ -64,6 +66,7 @@ import {
   inlineDocument,
   markdownToHtml,
 } from "@/lib/markdown"
+import { applyWechatDarkMode } from "@/lib/wechat-darkmode"
 import {
   BUILTIN_THEMES,
   DEFAULT_ARTICLE_LAYOUT_SETTINGS,
@@ -485,6 +488,7 @@ export default function App() {
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("write")
   const [previewMode, setPreviewMode] = useState<PreviewMode>("visual")
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>(375)
+  const [darkPreview, setDarkPreview] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [settingsView, setSettingsView] = useState<SettingsView>("theme")
   const [settingsPreviewOpen, setSettingsPreviewOpen] = useState(false)
@@ -494,6 +498,8 @@ export default function App() {
   const [deletingTheme, setDeletingTheme] = useState<ArticleTheme | null>(null)
   const [saveState, setSaveState] = useState<SaveState>("saved")
   const editorRef = useRef<HTMLTextAreaElement>(null)
+  const previewArticleRef = useRef<HTMLDivElement>(null)
+  const mobilePreviewArticleRef = useRef<HTMLDivElement>(null)
 
   const allThemes = useMemo(
     () => ({
@@ -520,6 +526,16 @@ export default function App() {
     () => inlineDocument(markdownToHtml(markdown), activeTheme, layoutSettings),
     [markdown, activeTheme, layoutSettings],
   )
+
+  useLayoutEffect(() => {
+    const previews = [previewArticleRef.current, mobilePreviewArticleRef.current]
+      .filter((preview): preview is HTMLDivElement => preview !== null)
+
+    previews.forEach((preview) => {
+      preview.innerHTML = finalHtml
+      if (darkPreview) applyWechatDarkMode(preview)
+    })
+  }, [darkPreview, finalHtml, settingsPreviewOpen])
 
   const characterCount = useMemo(
     () =>
@@ -1141,9 +1157,29 @@ export default function App() {
         <section className="preview-panel workspace-panel" aria-label="公众号预览">
           <SectionHeader
             title="公众号预览"
-            meta={`${previewWidth} px`}
+            meta={darkPreview ? "暗夜算法预览" : `${previewWidth} px`}
             actions={
-              <DropdownMenu.Root>
+              <div className="preview-header-actions">
+                <Tooltip delayDuration={350}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      hoverScale={1.02}
+                      tapScale={0.96}
+                      className={cn("dark-preview-toggle", darkPreview && "is-active")}
+                      aria-label={darkPreview ? "切换到日间预览" : "切换到暗夜预览"}
+                      aria-pressed={darkPreview}
+                      onClick={() => setDarkPreview((enabled) => !enabled)}
+                    >
+                      {darkPreview ? <Moon /> : <Sun />}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    {darkPreview ? "日间预览" : "暗夜预览（微信公众号算法）"}
+                  </TooltipContent>
+                </Tooltip>
+                <DropdownMenu.Root>
                 <Tooltip delayDuration={350}>
                   <TooltipTrigger asChild>
                     <DropdownMenu.Trigger asChild>
@@ -1193,7 +1229,8 @@ export default function App() {
                     </DropdownMenu.RadioGroup>
                   </DropdownMenu.Content>
                 </DropdownMenu.Portal>
-              </DropdownMenu.Root>
+                </DropdownMenu.Root>
+              </div>
             }
           />
 
@@ -1222,17 +1259,14 @@ export default function App() {
                     <span>{previewWidth}</span>
                     <i />
                   </div>
-                  <AnimatePresence mode="wait">
-                    <motion.article
-                      key={`${selectedThemeId}-${activeTheme.accent}-${activeTheme.fontSize}-${activeTheme.headingStyle}`}
-                      className="article-preview"
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-                      dangerouslySetInnerHTML={{ __html: finalHtml }}
-                    />
-                  </AnimatePresence>
+                  <motion.article
+                    className={cn("article-preview", darkPreview && "is-dark-preview")}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <div ref={previewArticleRef} />
+                  </motion.article>
                 </div>
               </TabsContent>
               <TabsContent value="html" className="preview-tab-content">
@@ -1280,9 +1314,10 @@ export default function App() {
                 <i />
               </div>
               <article
-                className="article-preview"
-                dangerouslySetInnerHTML={{ __html: finalHtml }}
-              />
+                className={cn("article-preview", darkPreview && "is-dark-preview")}
+              >
+                <div ref={mobilePreviewArticleRef} />
+              </article>
             </div>
           ) : (
             <>
