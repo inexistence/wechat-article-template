@@ -42,12 +42,29 @@ export type ThemeCapability = {
   description?: string
 }
 
+export type ThemeOutputContract = {
+  table: {
+    container: "none" | "frame" | "scroll"
+    backgrounds: "header" | "container" | "cells"
+  }
+  codeBlock: {
+    frame: "plain" | "terminal"
+    syntaxHighlighting: boolean
+    languageLabel: boolean
+    shadow: boolean
+  }
+  image: {
+    shadow: boolean
+  }
+}
+
 export type ThemeRendererContract = {
   id: ThemeRendererId
   name: string
   structureNote?: string
   typographyProfile: "system" | "editorial"
   capabilities: Record<ThemeControl, ThemeCapability>
+  output: ThemeOutputContract
 }
 
 const full = (): ThemeCapability => ({ level: "full" })
@@ -78,6 +95,21 @@ export const THEME_RENDERER_CONTRACTS = {
     name: "标准文章",
     typographyProfile: "system",
     capabilities: DEFAULT_CAPABILITIES,
+    output: {
+      table: {
+        container: "none",
+        backgrounds: "header",
+      },
+      codeBlock: {
+        frame: "plain",
+        syntaxHighlighting: false,
+        languageLabel: false,
+        shadow: false,
+      },
+      image: {
+        shadow: false,
+      },
+    },
   },
   "island-log": {
     id: "island-log",
@@ -91,6 +123,21 @@ export const THEME_RENDERER_CONTRACTS = {
       radius: partial("作用于引用、图片和内容容器。"),
       headingStyle: fixed("叶片标题是模板固定结构。"),
     },
+    output: {
+      table: {
+        container: "frame",
+        backgrounds: "container",
+      },
+      codeBlock: {
+        frame: "plain",
+        syntaxHighlighting: true,
+        languageLabel: false,
+        shadow: true,
+      },
+      image: {
+        shadow: true,
+      },
+    },
   },
   "juya-daily": {
     id: "juya-daily",
@@ -102,6 +149,21 @@ export const THEME_RENDERER_CONTRACTS = {
       ...DEFAULT_CAPABILITIES,
       spacing: partial("控制画布与正文边距，章节节奏保持固定。"),
       headingStyle: fixed("圆角标题是模板固定结构。"),
+    },
+    output: {
+      table: {
+        container: "frame",
+        backgrounds: "container",
+      },
+      codeBlock: {
+        frame: "plain",
+        syntaxHighlighting: false,
+        languageLabel: false,
+        shadow: false,
+      },
+      image: {
+        shadow: false,
+      },
     },
   },
   "geek-manual": {
@@ -116,6 +178,21 @@ export const THEME_RENDERER_CONTRACTS = {
       spacing: partial("控制画布边距与主要内容块间距。"),
       radius: partial("作用于提示、代码、图片和表格容器。"),
       headingStyle: fixed("轻量文档标题是模板固定结构。"),
+    },
+    output: {
+      table: {
+        container: "scroll",
+        backgrounds: "cells",
+      },
+      codeBlock: {
+        frame: "terminal",
+        syntaxHighlighting: true,
+        languageLabel: true,
+        shadow: true,
+      },
+      image: {
+        shadow: false,
+      },
     },
   },
 } satisfies Record<ThemeRendererId, ThemeRendererContract>
@@ -462,7 +539,6 @@ export const BUILTIN_THEMES: Record<string, ArticleTheme> = {
     name: "极客",
     description: "文档 · 克制",
     accent: "#d04f2b",
-    secondary: "#8d9a8f",
     text: "#26251e",
     paper: "#f7f7f4",
     quote: "#f0efea",

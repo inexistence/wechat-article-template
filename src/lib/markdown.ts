@@ -450,10 +450,8 @@ function buildGeekStyles(
     ul: `margin:24px 0;padding-left:1.42em;color:${colors.text};list-style-type:square;list-style-position:outside`,
     ol: `margin:0 0 16px;padding-left:1.42em;color:${colors.text};list-style-type:decimal;list-style-position:outside`,
     li: `margin:0 0 8px;padding-left:4px;color:${colors.text};font-size:${typography.fontSize}px;line-height:1.5`,
-    hr: `height:0;margin:40px 0;border:0;border-top:1px solid ${colors.borderSoft};background:transparent`,
     pre: `margin:0;padding:20px;overflow-x:auto;color:${colors.codeForeground};background:${colors.codeBackground};border:0;border-radius:0 0 ${radius.md}px ${radius.md}px;${mono};font-size:${typography.codeSize}px;line-height:${typography.codeLineHeight};white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;tab-size:4`,
     inlineCode: `margin:0;padding:4px;color:${colors.text};background:${colors.surfaceMuted};border:1px solid ${colors.borderSoft};border-radius:${radius.xs}px;${mono};font-size:${typography.codeSize}px;line-height:16px;letter-spacing:0.005em`,
-    inlineLabelCode: `margin:0;padding:4px;color:${colors.text};background:${colors.surfaceMuted};border:1px solid ${colors.borderSoft};border-radius:${radius.xs}px;${mono};font-size:${typography.codeSize}px;line-height:16px;letter-spacing:0.005em`,
     img: `display:block;max-width:100%;height:auto;margin:28px auto;border:1px solid ${colors.borderSoft};border-radius:${radius.md}px`,
     table: `width:max-content;min-width:100%;max-width:none;margin:0;border:0!important;border-collapse:collapse;border-spacing:0;table-layout:auto;background:${colors.paper};color:${colors.text}`,
     thead: `border:0!important;border-bottom:1px solid ${colors.borderSoft}!important;background:transparent`,
@@ -701,7 +699,6 @@ function decorateIslandDocument({
       "style",
       `margin:1.8em 0;padding:5px;overflow:hidden;background:${colors.highlight};border-radius:${radius.md + 2}px;box-sizing:border-box`,
     )
-    wrapper.setAttribute("data-island-table", "true")
     table.before(wrapper)
     wrapper.append(table)
 
@@ -775,7 +772,6 @@ function decorateJuyaDocument({
       "style",
       `margin:10px 15px;overflow:hidden;background:${colors.surfaceRaised};border:1px solid ${colors.border};border-radius:${radius.md}px`,
     )
-    wrapper.setAttribute("data-juya-table", "true")
     table.before(wrapper)
     wrapper.append(table)
 
@@ -846,7 +842,6 @@ function decorateGeekDocument({
       "style",
       `margin:24px 0;overflow:hidden;background:${colors.codeBackground};border:1px solid ${colors.codeBorder};border-radius:${radius.md}px;box-shadow:0 10px 24px ${colors.shadowStrong}`,
     )
-    wrapper.setAttribute("data-geek-code", "true")
 
     const toolbar = doc.createElement("section")
     toolbar.setAttribute(
@@ -891,7 +886,6 @@ function decorateGeekDocument({
       "style",
       `margin:24px 0;overflow-x:auto;overflow-y:hidden;background:transparent;border:1px solid ${colors.borderSoft};border-radius:${radius.xs}px`,
     )
-    wrapper.setAttribute("data-geek-table", "true")
     table.before(wrapper)
     wrapper.append(table)
 
@@ -935,10 +929,6 @@ const RENDERER_DEFINITIONS: Record<ThemeRendererId, RendererDefinition> = {
     buildStyles: buildGeekStyles,
     decorate: decorateGeekDocument,
     prepareCode: highlightGeekCode,
-    inlineCodeStyle: (node, styles) =>
-      node.closest("h1,h2,h3,h4") && styles.inlineLabelCode
-        ? styles.inlineLabelCode
-        : styles.inlineCode,
   },
 }
 

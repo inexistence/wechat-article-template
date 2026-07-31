@@ -1,8 +1,13 @@
 import path from "node:path"
 
+import { parseHTML } from "linkedom"
 import { createServer } from "vite"
 
 const projectRoot = process.cwd()
+const { window } = parseHTML("<html><body></body></html>")
+globalThis.DOMParser = window.DOMParser
+globalThis.Node = window.Node
+
 const server = await createServer({
   appType: "custom",
   configFile: false,
@@ -21,6 +26,32 @@ const server = await createServer({
 const fail = (message) => {
   throw new Error(`[theme-contract] ${message}`)
 }
+
+const requireElement = (element, message) => {
+  if (!element) fail(message)
+  return element
+}
+
+const styleOf = (element) => element.getAttribute("style") || ""
+
+const hasShadow = (element) => {
+  const style = styleOf(element)
+  return style.includes("box-shadow:") && !style.includes("box-shadow:none")
+}
+
+const OUTPUT_FIXTURE = `正文包含 \`inline-code\`。
+
+| Name | Value |
+| --- | --- |
+| Runtime | Browser |
+| Format | HTML |
+
+\`\`\`js
+const message = "hello";
+console.log(message);
+\`\`\`
+
+![Preview](https://example.com/preview.png)`
 
 const mutateThemeControl = (theme, control) => {
   const next = structuredClone(theme)
@@ -58,7 +89,7 @@ try {
     THEME_RENDERER_CONTRACTS,
     getThemeRendererContract,
   } = themeModule
-  const { getArticleStyles } = markdownModule
+  const { getArticleStyles, inlineDocument, markdownToHtml } = markdownModule
 
   const themesByRenderer = {
     default: BUILTIN_THEMES.clean,
@@ -107,24 +138,154 @@ try {
     }
   }
 
-  const geekStyles = getArticleStyles(BUILTIN_THEMES.geek)
-  if (
-    !geekStyles.th.includes(
-      `background-color:${BUILTIN_THEMES.geek.quote}!important`,
+  const fixtureHtml = markdownToHtml(OUTPUT_FIXTURE)
+  for (const [rendererId, contract] of Object.entries(
+    THEME_RENDERER_CONTRACTS,
+  )) {
+    const theme = themesByRenderer[rendererId]
+    const output = inlineDocument(fixtureHtml, theme)
+    const document = new DOMParser().parseFromString(
+      `<html><body>${output}</body></html>`,
+      "text/html",
     )
-  ) {
-    fail("geek table headers must carry their own paste-safe background")
-  }
-  if (
-    !geekStyles.td.includes(
-      `background-color:${BUILTIN_THEMES.geek.paper}!important`,
+    const root = requireElement(
+      document.body.firstElementChild,
+      `renderer "${rendererId}" produced no article root`,
     )
-  ) {
-    fail("geek table cells must carry their own paste-safe background")
+
+    const elements = [root, ...root.querySelectorAll("*")]
+    const internalAttribute = elements
+      .flatMap((element) => Array.from(element.attributes))
+      .find((attribute) => attribute.name.startsWith("data-"))
+    if (internalAttribute) {
+      fail(
+        `renderer "${rendererId}" leaked internal attribute "${internalAttribute.name}"`,
+      )
+    }
+
+    const table = requireElement(
+      root.querySelector("table"),
+      `renderer "${rendererId}" produced no table`,
+    )
+    const tableContainer = requireElement(
+      table.parentElement,
+      `renderer "${rendererId}" table has no container`,
+    )
+    const tableContainerStyle = styleOf(tableContainer)
+    if (
+      contract.output.table.container === "none" &&
+      tableContainer !== root
+    ) {
+      fail(`renderer "${rendererId}" must render an unwrapped table`)
+    }
+    if (
+      contract.output.table.container === "frame" &&
+      (tableContainer === root ||
+        !tableContainerStyle.includes("overflow:hidden"))
+    ) {
+      fail(`renderer "${rendererId}" table must use a framed container`)
+    }
+    if (
+      contract.output.table.container === "scroll" &&
+      (tableContainer === root ||
+        !tableContainerStyle.includes("overflow-x:auto"))
+    ) {
+      fail(`renderer "${rendererId}" table must scroll horizontally`)
+    }
+
+    const tableHeader = requireElement(
+      table.querySelector("th"),
+      `renderer "${rendererId}" table has no header cell`,
+    )
+    const tableCell = requireElement(
+      table.querySelector("td"),
+      `renderer "${rendererId}" table has no body cell`,
+    )
+    if (
+      contract.output.table.backgrounds === "header" &&
+      !/background(?:-color)?:/.test(styleOf(tableHeader))
+    ) {
+      fail(`renderer "${rendererId}" table header needs an inline background`)
+    }
+    if (
+      contract.output.table.backgrounds === "container" &&
+      (!tableContainerStyle.includes("background:") ||
+        tableContainerStyle.includes("background:transparent"))
+    ) {
+      fail(`renderer "${rendererId}" table container needs its own background`)
+    }
+    if (
+      contract.output.table.backgrounds === "cells" &&
+      (!styleOf(tableHeader).includes("background-color:") ||
+        !styleOf(tableHeader).includes("!important") ||
+        !styleOf(tableCell).includes("background-color:") ||
+        !styleOf(tableCell).includes("!important"))
+    ) {
+      fail(
+        `renderer "${rendererId}" table cells need paste-safe inline backgrounds`,
+      )
+    }
+
+    const pre = requireElement(
+      root.querySelector("pre"),
+      `renderer "${rendererId}" produced no code block`,
+    )
+    const code = requireElement(
+      pre.querySelector("code"),
+      `renderer "${rendererId}" code block has no code element`,
+    )
+    const codeFrame =
+      contract.output.codeBlock.frame === "terminal"
+        ? requireElement(
+            pre.parentElement,
+            `renderer "${rendererId}" terminal has no frame`,
+          )
+        : pre
+    if (
+      contract.output.codeBlock.frame === "plain" &&
+      pre.parentElement !== root
+    ) {
+      fail(`renderer "${rendererId}" code block must remain unwrapped`)
+    }
+    if (
+      contract.output.codeBlock.frame === "terminal" &&
+      pre.parentElement === root
+    ) {
+      fail(`renderer "${rendererId}" code block needs a terminal frame`)
+    }
+
+    const highlighted = Array.from(code.querySelectorAll("span")).some(
+      (element) => styleOf(element).includes("color:"),
+    )
+    if (highlighted !== contract.output.codeBlock.syntaxHighlighting) {
+      fail(
+        `renderer "${rendererId}" syntax highlighting does not match its contract`,
+      )
+    }
+
+    const languageLabel =
+      contract.output.codeBlock.frame === "terminal" &&
+      pre.previousElementSibling?.textContent.includes("JS")
+    if (Boolean(languageLabel) !== contract.output.codeBlock.languageLabel) {
+      fail(
+        `renderer "${rendererId}" language label does not match its contract`,
+      )
+    }
+    if (hasShadow(codeFrame) !== contract.output.codeBlock.shadow) {
+      fail(`renderer "${rendererId}" code shadow does not match its contract`)
+    }
+
+    const image = requireElement(
+      root.querySelector("img"),
+      `renderer "${rendererId}" produced no image`,
+    )
+    if (hasShadow(image) !== contract.output.image.shadow) {
+      fail(`renderer "${rendererId}" image shadow does not match its contract`)
+    }
   }
 
   console.log(
-    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls`,
+    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls + output invariants`,
   )
 } finally {
   await server.close()
