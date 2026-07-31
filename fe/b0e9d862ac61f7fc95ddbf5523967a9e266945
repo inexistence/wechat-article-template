@@ -1,0 +1,22 @@
+scripts/verify-theme-contract.mjs
+  s_60226a5ffa62b0::t_f886b3c6aed34d 130-137,388-390,427-430,454-475
+src/lib/markdown.ts
+  s_60226a5ffa62b0::t_3e31615e8e8eaa 3,301,367,401,433,435,439-441,472,1084-1085,1087-1089,1104-1107,1127,1132-1135,1139,1233-1234,1316-1322,1407-1414
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "feb0e9d862ac61f7fc95ddbf5523967a9e266945",
+  "prompts": {},
+  "logical_commit_id": "feb0e9d862ac61f7fc95ddbf5523967a9e266945",
+  "sessions": {
+    "s_60226a5ffa62b0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb810-00a4-74b2-8269-29d42d81f0ab",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
