@@ -1,0 +1,24 @@
+scripts/verify-theme-contract.mjs
+  s_52d69d60144d13::t_e8a327fd60dc09 97-102,396,399-404,419-420,423-432,434-436,460-487,491
+src/App.tsx
+  s_52d69d60144d13::t_4ba549669d03ad 62,535-538,540,547,556
+src/lib/markdown.ts
+  s_52d69d60144d13::t_849ebb458b150a 34-41,88,281-296,1080-1083,1113,1118-1127,1130,1132-1135,1152,1163-1166,1198-1201,1294,1297-1304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8d680345ebdfd671a3db1136a33459b787af1d67",
+  "prompts": {},
+  "logical_commit_id": "8d680345ebdfd671a3db1136a33459b787af1d67",
+  "sessions": {
+    "s_52d69d60144d13": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb7c9-dab3-7380-86c6-235123da7991",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
