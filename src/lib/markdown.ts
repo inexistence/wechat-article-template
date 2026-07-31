@@ -54,6 +54,7 @@ export const DEFAULT_MARKDOWN = `# 让内容更好读
 | 简报 | 利落、理性 | 科技与知识分享 |
 | 岛屿 | 温暖、轻松 | 生活记录与旅行随笔 |
 | 橘鸦 | 清爽、醒目 | 简报与资讯 |
+| 极客 | 克制、精确 | 技术教程与工程实践 |
 
 \`\`\`js
 const content = "好内容";
@@ -427,14 +428,59 @@ function buildJuyaStyles(
   }
 }
 
-type IslandCodeToken = {
+function buildGeekStyles(
+  _theme: ArticleTheme,
+  tokens: RenderTokens,
+): ArticleStyles {
+  const { colors, radius, spacing, typography } = tokens
+  const mono = `font-family:${typography.mono};font-variant-ligatures:none`
+
+  return {
+    root: `padding:${spacing.lg}px ${spacing.md}px ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word;overflow-wrap:anywhere`,
+    h1: `margin:0 0 32px;padding:0;color:${colors.text};background:transparent;border:0;border-radius:0;box-shadow:none;font-family:${typography.display};font-size:${typography.fontSize + 19}px;line-height:1.2;letter-spacing:-0.02em;font-weight:400`,
+    h2: `margin:48px 0 16px;padding:0;color:${colors.text};border:0;font-family:${typography.display};font-size:${typography.fontSize + 6}px;line-height:1.3;letter-spacing:-0.005em;font-weight:400`,
+    h3: `margin:36px 0 14px;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 2}px;line-height:1.4;letter-spacing:-0.003em;font-weight:600`,
+    h4: `margin:30px 0 12px;color:${colors.text};font-size:${typography.fontSize}px;line-height:1.45;font-weight:650`,
+    p: `margin:0 0 16px;color:${colors.text};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};letter-spacing:0.005em;text-align:left`,
+    strong: `color:${colors.text};font-weight:700`,
+    em: "font-style:italic",
+    del: "opacity:0.52",
+    a: `color:${colors.text};font-weight:400;text-decoration-line:underline;text-decoration-color:${colors.divider};text-decoration-thickness:auto;text-underline-offset:auto;border:0`,
+    blockquote: `margin:24px 0;padding:12px 16px;color:${colors.text};background:${colors.surface};border:1px solid ${colors.borderSoft};border-radius:${radius.md}px;font-size:${typography.captionSize}px;line-height:20px`,
+    ul: `margin:24px 0;padding-left:1.42em;color:${colors.text};list-style-type:square;list-style-position:outside`,
+    ol: `margin:0 0 16px;padding-left:1.42em;color:${colors.text};list-style-type:decimal;list-style-position:outside`,
+    li: `margin:0 0 8px;padding-left:4px;color:${colors.text};font-size:${typography.fontSize}px;line-height:1.5`,
+    hr: `height:0;margin:40px 0;border:0;border-top:1px solid ${colors.borderSoft};background:transparent`,
+    pre: `margin:0;padding:20px;overflow-x:auto;color:${colors.codeForeground};background:${colors.codeBackground};border:0;border-radius:0 0 ${radius.md}px ${radius.md}px;${mono};font-size:${typography.codeSize}px;line-height:${typography.codeLineHeight};white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;tab-size:4`,
+    inlineCode: `margin:0;padding:4px;color:${colors.text};background:${colors.surfaceMuted};border:1px solid ${colors.borderSoft};border-radius:${radius.xs}px;${mono};font-size:${typography.codeSize}px;line-height:16px;letter-spacing:0.005em`,
+    inlineLabelCode: `margin:0;padding:4px;color:${colors.text};background:${colors.surfaceMuted};border:1px solid ${colors.borderSoft};border-radius:${radius.xs}px;${mono};font-size:${typography.codeSize}px;line-height:16px;letter-spacing:0.005em`,
+    img: `display:block;max-width:100%;height:auto;margin:28px auto;border:1px solid ${colors.borderSoft};border-radius:${radius.md}px`,
+    table: `width:max-content;min-width:100%;max-width:none;margin:0;border:0!important;border-collapse:collapse;border-spacing:0;table-layout:auto;background:${colors.paper};color:${colors.text}`,
+    thead: `border:0!important;border-bottom:1px solid ${colors.borderSoft}!important;background:transparent`,
+    tbody: `border:0!important;background:${colors.paper}`,
+    tr: "border:0!important;background:transparent",
+    th: `padding:12px 16px;border:0!important;color:${colors.text};background-color:${colors.surface}!important;font-size:${typography.codeSize}px;font-weight:400;line-height:1.34;text-align:left;white-space:nowrap;word-break:keep-all`,
+    td: `padding:12px 16px;border:0!important;color:${colors.text};background-color:${colors.paper}!important;font-size:${typography.fontSize}px;line-height:1.4;text-align:left;white-space:nowrap;word-break:keep-all`,
+  }
+}
+
+type CodeToken = {
   start: number
   end: number
   color: string
   priority: number
+  fontWeight?: number
+  fontStyle?: "italic"
 }
 
-const ISLAND_CODE_PATTERNS = [
+type CodePattern = {
+  pattern: RegExp
+  color: string
+  fontWeight?: number
+  fontStyle?: "italic"
+}
+
+const ISLAND_CODE_PATTERNS: readonly CodePattern[] = [
   { pattern: /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g, color: "#6b5e50" },
   {
     pattern: /`(?:\\[\s\S]|[^`])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,
@@ -457,25 +503,103 @@ const ISLAND_CODE_PATTERNS = [
   { pattern: /\b[a-zA-Z_$][\w$]*(?=\s*=)/g, color: "#e8c87a" },
   { pattern: /\b(?:0x[\da-f]+|\d+(?:\.\d+)?)\b/gi, color: "#a8d4a0" },
   { pattern: /=>|===|!==|==|!=|>=|<=|&&|\|\||\?\?|[+\-*/%=<>!?:]/g, color: "#d4b896" },
-] as const
+]
 
-function highlightIslandCode(code: Element, doc: Document) {
+const GEEK_CODE_PATTERNS: readonly CodePattern[] = [
+  {
+    pattern: /\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,
+    color: "#93a298",
+    fontStyle: "italic",
+  },
+  {
+    pattern: /`(?:\\[\s\S]|[^`])*`|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,
+    color: "#e0bd78",
+  },
+  {
+    pattern:
+      /\b(?:import|from|as|export|default|const|let|var|function|return|if|else|for|while|switch|case|break|continue|try|catch|throw|finally|new|typeof|instanceof|async|await|type|interface|class|extends|def|lambda|yield|in|is|and|or|not|with|match|fn|mut|pub|use|impl|struct|enum|package|func|defer|go|select|then|fi|do|done|local)\b/g,
+    color: "#e8896b",
+    fontWeight: 700,
+  },
+  {
+    pattern: /\b(?:true|false|null|undefined|void|None|True|False|NaN|Infinity)\b/g,
+    color: "#d5a185",
+  },
+  {
+    pattern: /\$\{?[\w@#?$!*-]+\}?/g,
+    color: "#a7c7b6",
+    fontWeight: 650,
+  },
+  {
+    pattern: /\b[A-Z][A-Za-z0-9_]*\b/g,
+    color: "#9fc2b5",
+  },
+  {
+    pattern: /\b[a-zA-Z_$][\w$]*(?=\s*\()/g,
+    color: "#d7e3dc",
+    fontWeight: 650,
+  },
+  {
+    pattern: /(^|\s)--?[\w-]+/gm,
+    color: "#d8bd84",
+  },
+  {
+    pattern: /\b(?:0x[\da-f]+|\d+(?:\.\d+)?)\b/gi,
+    color: "#aacac0",
+  },
+  {
+    pattern: /=>|===|!==|==|!=|>=|<=|&&|\|\||\?\?|[+\-*/%=<>!?:]/g,
+    color: "#c1b6a4",
+  },
+]
+
+const GEEK_HASH_COMMENT_PATTERN: CodePattern = {
+  pattern: /^\s*#[^\n]*/gm,
+  color: "#93a298",
+  fontStyle: "italic",
+}
+
+const GEEK_HASH_COMMENT_LANGUAGES = new Set([
+  "bash",
+  "conf",
+  "dockerfile",
+  "fish",
+  "ini",
+  "py",
+  "python",
+  "sh",
+  "shell",
+  "toml",
+  "yaml",
+  "yml",
+  "zsh",
+])
+
+function highlightCode(
+  code: Element,
+  doc: Document,
+  patterns: readonly CodePattern[],
+) {
   const source = code.textContent || ""
-  const tokens: IslandCodeToken[] = []
+  const tokens: CodeToken[] = []
 
-  ISLAND_CODE_PATTERNS.forEach(({ pattern, color }, priority) => {
-    pattern.lastIndex = 0
-    for (const match of source.matchAll(pattern)) {
-      const start = match.index
-      if (start === undefined || !match[0]) continue
-      tokens.push({
-        start,
-        end: start + match[0].length,
-        color,
-        priority,
-      })
-    }
-  })
+  patterns.forEach(
+    ({ pattern, color, fontWeight, fontStyle }, priority) => {
+      pattern.lastIndex = 0
+      for (const match of source.matchAll(pattern)) {
+        const start = match.index
+        if (start === undefined || !match[0]) continue
+        tokens.push({
+          start,
+          end: start + match[0].length,
+          color,
+          priority,
+          fontWeight,
+          fontStyle,
+        })
+      }
+    },
+  )
 
   tokens.sort((left, right) => left.start - right.start || left.priority - right.priority)
 
@@ -488,7 +612,10 @@ function highlightIslandCode(code: Element, doc: Document) {
     }
     const span = doc.createElement("span")
     span.textContent = source.slice(token.start, token.end)
-    span.setAttribute("style", `color:${token.color}`)
+    const style = [`color:${token.color}`]
+    if (token.fontWeight) style.push(`font-weight:${token.fontWeight}`)
+    if (token.fontStyle) style.push(`font-style:${token.fontStyle}`)
+    span.setAttribute("style", style.join(";"))
     fragment.append(span)
     cursor = token.end
   })
@@ -501,6 +628,17 @@ function highlightIslandCode(code: Element, doc: Document) {
     "style",
     "margin:0;padding:0;color:inherit;background:transparent;border:0;font:inherit;line-height:inherit;white-space:inherit",
   )
+}
+
+function highlightIslandCode(code: Element, doc: Document, _language: string) {
+  highlightCode(code, doc, ISLAND_CODE_PATTERNS)
+}
+
+function highlightGeekCode(code: Element, doc: Document, language: string) {
+  const patterns = GEEK_HASH_COMMENT_LANGUAGES.has(language.toLowerCase())
+    ? [GEEK_HASH_COMMENT_PATTERN, ...GEEK_CODE_PATTERNS]
+    : GEEK_CODE_PATTERNS
+  highlightCode(code, doc, patterns)
 }
 
 function preserveCodeWhitespace(node: Node) {
@@ -524,7 +662,7 @@ type RendererDefinition = {
   buildStyles: (theme: ArticleTheme, tokens: RenderTokens) => ArticleStyles
   decorate: (context: RendererContext) => void
   inlineCodeStyle?: (node: Element, styles: ArticleStyles) => string
-  prepareCode?: (code: Element, doc: Document) => void
+  prepareCode?: (code: Element, doc: Document, language: string) => void
 }
 
 function replaceRulesWithDivider(
@@ -693,6 +831,88 @@ function decorateJuyaDocument({
   )
 }
 
+function decorateGeekDocument({
+  doc,
+  root,
+  styles,
+  tokens,
+}: RendererContext) {
+  const { colors, radius, typography } = tokens
+
+  root.querySelectorAll("pre").forEach((pre) => {
+    const language = pre.getAttribute("data-language") || "text"
+    const wrapper = doc.createElement("section")
+    wrapper.setAttribute(
+      "style",
+      `margin:24px 0;overflow:hidden;background:${colors.codeBackground};border:1px solid ${colors.codeBorder};border-radius:${radius.md}px;box-shadow:0 10px 24px ${colors.shadowStrong}`,
+    )
+    wrapper.setAttribute("data-geek-code", "true")
+
+    const toolbar = doc.createElement("section")
+    toolbar.setAttribute(
+      "style",
+      `display:flex;align-items:center;min-height:34px;padding:0 12px;color:${colors.codeForeground};background:${colors.codeBorder};border-bottom:1px solid ${colors.codeBorder};font-family:${typography.mono};font-size:${typography.smallSize - 1}px;line-height:1.4`,
+    )
+    const controls = doc.createElement("span")
+    controls.setAttribute(
+      "style",
+      "display:inline-flex;align-items:center;gap:6px;line-height:0",
+    )
+    const controlColors = ["#ff5f57", "#febc2e", "#28c840"]
+    controlColors.forEach((color) => {
+      const control = doc.createElement("span")
+      control.textContent = "\u00a0"
+      control.setAttribute(
+        "style",
+        `display:inline-block;width:8px;height:8px;background:${color};border-radius:50%;font-size:0;line-height:0`,
+      )
+      controls.append(control)
+    })
+    controls.setAttribute("aria-hidden", "true")
+    toolbar.append(controls)
+
+    if (language !== "text") {
+      const label = doc.createElement("span")
+      label.textContent = language.toUpperCase()
+      label.setAttribute(
+        "style",
+        "margin-left:auto;text-align:right;letter-spacing:0.1em;opacity:0.66",
+      )
+      toolbar.append(label)
+    }
+
+    pre.before(wrapper)
+    wrapper.append(toolbar, pre)
+  })
+
+  root.querySelectorAll("table").forEach((table) => {
+    const wrapper = doc.createElement("section")
+    wrapper.setAttribute(
+      "style",
+      `margin:24px 0;overflow-x:auto;overflow-y:hidden;background:transparent;border:1px solid ${colors.borderSoft};border-radius:${radius.xs}px`,
+    )
+    wrapper.setAttribute("data-geek-table", "true")
+    table.before(wrapper)
+    wrapper.append(table)
+
+    const rows = Array.from(table.querySelectorAll("tbody tr"))
+    rows.forEach((row, rowIndex) => {
+      row.setAttribute(
+        "style",
+        rowIndex < rows.length - 1
+          ? `border:0!important;border-bottom:1px solid ${colors.borderSoft}!important;background:transparent`
+          : styles.tr,
+      )
+    })
+  })
+
+  replaceRulesWithDivider(
+    root,
+    doc,
+    `height:0;margin:40px 0;border:0;border-top:1px solid ${colors.borderSoft};font-size:0;line-height:0;overflow:hidden`,
+  )
+}
+
 const RENDERER_DEFINITIONS: Record<ThemeRendererId, RendererDefinition> = {
   default: {
     buildStyles: buildDefaultStyles,
@@ -708,6 +928,15 @@ const RENDERER_DEFINITIONS: Record<ThemeRendererId, RendererDefinition> = {
     decorate: decorateJuyaDocument,
     inlineCodeStyle: (node, styles) =>
       node.closest("h1,h2,h3,h4,li") && styles.inlineLabelCode
+        ? styles.inlineLabelCode
+        : styles.inlineCode,
+  },
+  "geek-manual": {
+    buildStyles: buildGeekStyles,
+    decorate: decorateGeekDocument,
+    prepareCode: highlightGeekCode,
+    inlineCodeStyle: (node, styles) =>
+      node.closest("h1,h2,h3,h4") && styles.inlineLabelCode
         ? styles.inlineLabelCode
         : styles.inlineCode,
   },
@@ -770,15 +999,21 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
   root.querySelectorAll("pre").forEach((node) => {
     const code = node.querySelector("code")
     if (code) {
-      renderer.prepareCode?.(code, doc)
+      renderer.prepareCode?.(
+        code,
+        doc,
+        node.getAttribute("data-language") || "text",
+      )
       preserveCodeWhitespace(code)
     }
-    node.removeAttribute("data-language")
   })
   root.querySelectorAll("a").forEach((node) => {
     node.setAttribute("target", "_blank")
   })
 
   renderer.decorate({ doc, root, styles, tokens })
+  root
+    .querySelectorAll("pre")
+    .forEach((node) => node.removeAttribute("data-language"))
   return root.outerHTML
 }

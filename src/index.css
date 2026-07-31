@@ -498,6 +498,32 @@ textarea {
   --thumbnail-footer-shadow: 0 4px 0 var(--thumbnail-text);
 }
 
+.theme-thumbnail--geek-manual {
+  --thumbnail-marker-display: none;
+  --thumbnail-title-height: 3px;
+  --thumbnail-title-top: 8px;
+  --thumbnail-title-left: 7px;
+  --thumbnail-title-right: 15px;
+  --thumbnail-title-background: var(--thumbnail-text);
+  --thumbnail-title-radius: 1px;
+  --thumbnail-body-height: 10px;
+  --thumbnail-body-top: 18px;
+  --thumbnail-body-background: var(--thumbnail-quote);
+  --thumbnail-body-radius: 3px;
+  --thumbnail-body-opacity: 1;
+  --thumbnail-body-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--thumbnail-text) 12%, transparent);
+  --thumbnail-footer-width: auto;
+  --thumbnail-footer-height: 11px;
+  --thumbnail-footer-top: 34px;
+  --thumbnail-footer-left: 7px;
+  --thumbnail-footer-right: 7px;
+  --thumbnail-footer-background: var(--thumbnail-text);
+  --thumbnail-footer-opacity: 1;
+  --thumbnail-footer-shadow: inset 0 3px 0
+    color-mix(in srgb, var(--thumbnail-paper) 14%, var(--thumbnail-text));
+}
+
 .theme-copy strong,
 .theme-copy small {
   display: block;

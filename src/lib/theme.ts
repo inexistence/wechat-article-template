@@ -1,6 +1,6 @@
 export type HeadingStyle = "bar" | "underline" | "label"
 export type FontFamily = "sans" | "serif" | "rounded"
-export type ThemeRenderer = "island-log" | "juya-daily"
+export type ThemeRenderer = "island-log" | "juya-daily" | "geek-manual"
 export type ThemeRendererId = "default" | ThemeRenderer
 
 export type ArticleTheme = {
@@ -104,6 +104,20 @@ export const THEME_RENDERER_CONTRACTS = {
       headingStyle: fixed("圆角标题是模板固定结构。"),
     },
   },
+  "geek-manual": {
+    id: "geek-manual",
+    name: "工程编辑部",
+    typographyProfile: "system",
+    structureNote:
+      "轻量文档标题、提示卡片、终端代码栏和细线表格是固定结构。留白与圆角控制内容容器，字体气质应用于正文，技术信息固定使用等宽字体。",
+    capabilities: {
+      ...DEFAULT_CAPABILITIES,
+      accent: fixed("Cursor 式单色文档不使用额外强调色。"),
+      spacing: partial("控制画布边距与主要内容块间距。"),
+      radius: partial("作用于提示、代码、图片和表格容器。"),
+      headingStyle: fixed("轻量文档标题是模板固定结构。"),
+    },
+  },
 } satisfies Record<ThemeRendererId, ThemeRendererContract>
 
 export const THEME_CONTROL_LABELS: Record<ThemeControl, string> = {
@@ -119,7 +133,11 @@ export const THEME_CONTROL_LABELS: Record<ThemeControl, string> = {
 }
 
 export function isThemeRenderer(value: unknown): value is ThemeRenderer {
-  return value === "island-log" || value === "juya-daily"
+  return (
+    value === "island-log" ||
+    value === "juya-daily" ||
+    value === "geek-manual"
+  )
 }
 
 export function getThemeRendererId(theme: ArticleTheme): ThemeRendererId {
@@ -145,10 +163,12 @@ export type RenderTokens = {
     text: string
     paper: string
     surface: string
+    surfaceMuted: string
     surfaceRaised: string
     highlight: string
     highlightText: string
     border: string
+    borderSoft: string
     borderStrong: string
     divider: string
     codeBackground: string
@@ -157,6 +177,7 @@ export type RenderTokens = {
     tableStripe: string
     secondary: string
     shadow: string
+    shadowStrong: string
   }
   typography: {
     body: string
@@ -302,10 +323,12 @@ export function resolveThemeTokens(theme: ArticleTheme): RenderTokens {
       text: theme.text,
       paper: theme.paper,
       surface: theme.quote,
+      surfaceMuted: mixColor(theme.quote, theme.paper, 0.8),
       surfaceRaised: mixColor("#ffffff", theme.paper, 0.72),
       highlight: mixColor(secondary, theme.paper, 0.18),
       highlightText: mixColor(theme.accent, theme.text, 0.68),
       border: mixColor(theme.text, theme.paper, 0.16),
+      borderSoft: mixColor(theme.text, theme.paper, 0.1),
       borderStrong: mixColor(theme.text, theme.paper, 0.28),
       divider: mixColor(theme.text, theme.paper, 0.36),
       codeBackground: theme.code,
@@ -314,6 +337,7 @@ export function resolveThemeTokens(theme: ArticleTheme): RenderTokens {
       tableStripe: mixColor(theme.text, theme.paper, 0.025),
       secondary,
       shadow: colorWithAlpha(theme.text, 0.12),
+      shadowStrong: colorWithAlpha(theme.text, 0.2),
     },
     typography: {
       body: bodyFont,
@@ -432,5 +456,23 @@ export const BUILTIN_THEMES: Record<string, ArticleTheme> = {
     headingStyle: "underline",
     fontFamily: "sans",
     renderer: "juya-daily",
+  },
+  geek: {
+    id: "geek",
+    name: "极客",
+    description: "文档 · 克制",
+    accent: "#d04f2b",
+    secondary: "#8d9a8f",
+    text: "#26251e",
+    paper: "#f7f7f4",
+    quote: "#f0efea",
+    code: "#20201e",
+    fontSize: 15,
+    lineHeight: 1.625,
+    spacing: 22,
+    radius: 10,
+    headingStyle: "underline",
+    fontFamily: "sans",
+    renderer: "geek-manual",
   },
 }

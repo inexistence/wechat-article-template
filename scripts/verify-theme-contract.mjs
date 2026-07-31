@@ -64,6 +64,7 @@ try {
     default: BUILTIN_THEMES.clean,
     "island-log": BUILTIN_THEMES.island,
     "juya-daily": BUILTIN_THEMES.juya,
+    "geek-manual": BUILTIN_THEMES.geek,
   }
 
   for (const [rendererId, contract] of Object.entries(
@@ -104,6 +105,22 @@ try {
         )
       }
     }
+  }
+
+  const geekStyles = getArticleStyles(BUILTIN_THEMES.geek)
+  if (
+    !geekStyles.th.includes(
+      `background-color:${BUILTIN_THEMES.geek.quote}!important`,
+    )
+  ) {
+    fail("geek table headers must carry their own paste-safe background")
+  }
+  if (
+    !geekStyles.td.includes(
+      `background-color:${BUILTIN_THEMES.geek.paper}!important`,
+    )
+  ) {
+    fail("geek table cells must carry their own paste-safe background")
   }
 
   console.log(
