@@ -812,7 +812,8 @@ function decorateIslandDocument({
     table.before(wrapper)
     wrapper.append(table)
 
-    table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
+    const bodyRows = Array.from(table.querySelectorAll("tbody tr"))
+    bodyRows.forEach((row, rowIndex) => {
       row.setAttribute(
         "style",
         rowIndex % 2 === 1
@@ -821,8 +822,20 @@ function decorateIslandDocument({
       )
     })
 
-    table.querySelectorAll("tbody tr:last-child td").forEach((cell) => {
-      cell.setAttribute("style", `${styles.td};border-bottom:0!important`)
+    const lastRow = bodyRows.at(-1)
+    const lastRowBackground =
+      bodyRows.length % 2 === 0 ? colors.paper : colors.highlight
+    lastRow?.querySelectorAll("td").forEach((cell, cellIndex, cells) => {
+      const bottomRadius =
+        cellIndex === 0
+          ? `border-bottom-left-radius:${radius.md}px`
+          : cellIndex === cells.length - 1
+            ? `border-bottom-right-radius:${radius.md}px`
+            : ""
+      cell.setAttribute(
+        "style",
+        `${styles.td};border-bottom:0!important;background:${lastRowBackground};${bottomRadius}`,
+      )
     })
   })
 
