@@ -285,6 +285,7 @@ try {
     paragraphAlign: "justify",
     firstLineIndent: true,
     paragraphSpacing: "relaxed",
+    imageLayout: "stack",
     imageWidth: "full",
     imageCaptionAlign: "left",
     imageCaptionSize: 14,
@@ -444,6 +445,7 @@ try {
     BUILTIN_THEMES.clean,
     {
       ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+      imageLayout: "stack",
       showImageCaptions: false,
     },
   )

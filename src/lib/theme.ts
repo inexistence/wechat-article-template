@@ -28,7 +28,7 @@ export const DEFAULT_ARTICLE_LAYOUT_SETTINGS: ArticleLayoutSettings = {
   paragraphAlign: "justify",
   firstLineIndent: false,
   paragraphSpacing: "standard",
-  imageLayout: "stack",
+  imageLayout: "scroll",
   imageWidth: "natural",
   showImageCaptions: true,
   imageCaptionAlign: "center",
