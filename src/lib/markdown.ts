@@ -1,5 +1,6 @@
 import {
   DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+  getThemeRendererContract,
   getThemeRendererId,
   resolveThemeTokens,
   type ArticleLayoutSettings,
@@ -297,6 +298,7 @@ export function absolutizeRelativeImageSources(html: string, baseUrl: string) {
 }
 
 export type ArticleStyles = {
+  contentInset: number
   root: string
   h1: string
   h2: string
@@ -362,6 +364,7 @@ function buildDefaultStyles(
   }
 
   return {
+    contentInset: 0,
     root: `padding:${spacing.lg}px ${spacing.md}px ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word`,
     h1: `margin:0 0 0.7em;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 11}px;line-height:1.4;letter-spacing:0.02em;font-weight:700`,
     h2,
@@ -395,6 +398,7 @@ function buildIslandStyles(
 ): ArticleStyles {
   const { colors, radius, spacing, typography } = tokens
   return {
+    contentInset: 0,
     root: `padding:${spacing.md + 10}px ${spacing.md}px ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word`,
     h1: `margin:0 0 0.8em;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 12}px;line-height:1.32;letter-spacing:-0.025em;font-weight:900`,
     h2: `margin:2.45em 0 0.85em;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 7}px;line-height:1.35;font-weight:900`,
@@ -426,14 +430,15 @@ function buildJuyaStyles(
   tokens: RenderTokens,
 ): ArticleStyles {
   const { colors, radius, spacing, typography } = tokens
-  const contentMargin = Math.max(10, spacing.md)
+  const contentInset = Math.max(10, spacing.md)
   return {
+    contentInset,
     root: `padding:${spacing.md + 2}px 0 ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word;overflow-wrap:break-word;text-align:left`,
     h1: `margin:10px 0 15px;padding:2px 10px;color:${colors.accent};font-family:${typography.display};font-size:${typography.fontSize + 3}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:center`,
     h2: `margin:30px 8px 15px;padding:7px 15px;color:${colors.text};background:${colors.surface};border:0;border-radius:${Math.max(8, radius.md - 2)}px;font-family:${typography.display};font-size:${typography.fontSize + 1}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:left;word-break:break-all`,
-    h3: `margin:28px ${contentMargin}px 12px;color:${colors.accent};font-family:${typography.display};font-size:${typography.fontSize + 1}px;line-height:1.5;letter-spacing:0.04em;font-weight:700`,
-    h4: `margin:24px ${contentMargin}px 10px;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize}px;line-height:1.5;font-weight:700`,
-    p: `margin:0 ${contentMargin}px;padding:5px 0;color:${colors.text};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};letter-spacing:0.06em;text-align:left;text-indent:0`,
+    h3: `margin:28px ${contentInset}px 12px;color:${colors.accent};font-family:${typography.display};font-size:${typography.fontSize + 1}px;line-height:1.5;letter-spacing:0.04em;font-weight:700`,
+    h4: `margin:24px ${contentInset}px 10px;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize}px;line-height:1.5;font-weight:700`,
+    p: `margin:0 ${contentInset}px;padding:5px 0;color:${colors.text};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};letter-spacing:0.06em;text-align:left;text-indent:0`,
     strong: `color:${colors.text};font-weight:700`,
     em: "font-style:italic",
     del: "opacity:0.55",
@@ -464,6 +469,7 @@ function buildGeekStyles(
   const mono = `font-family:${typography.mono};font-variant-ligatures:none`
 
   return {
+    contentInset: 0,
     root: `padding:${spacing.lg}px ${spacing.md}px ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word;overflow-wrap:anywhere`,
     h1: `margin:0 0 32px;padding:0;color:${colors.text};background:transparent;border:0;border-radius:0;box-shadow:none;font-family:${typography.display};font-size:${typography.fontSize + 19}px;line-height:1.2;letter-spacing:-0.02em;font-weight:400`,
     h2: `margin:48px 0 16px;padding:0;color:${colors.text};border:0;font-family:${typography.display};font-size:${typography.fontSize + 6}px;line-height:1.3;letter-spacing:-0.005em;font-weight:400`,
@@ -1075,7 +1081,12 @@ function groupScrollableImages(
   root: HTMLElement,
   doc: Document,
   tokens: RenderTokens,
+  contentInset: number,
+  preserveImageShadow: boolean,
 ) {
+  const shadowInlineInset = preserveImageShadow ? 16 : 0
+  const shadowBlockStartInset = preserveImageShadow ? 16 : 0
+  const shadowBlockEndInset = preserveImageShadow ? 36 : 0
   let candidates: { container: Element; images: Element[] }[] = []
   const galleryFrames = new Map<
     Element,
@@ -1090,7 +1101,10 @@ function groupScrollableImages(
     }
 
     const group = doc.createElement("section")
-    group.setAttribute("style", "margin:1.8em 0")
+    group.setAttribute(
+      "style",
+      `margin:1.8em ${contentInset}px`,
+    )
 
     const hint = doc.createElement("section")
     hint.setAttribute(
@@ -1110,15 +1124,19 @@ function groupScrollableImages(
     const scroller = doc.createElement("section")
     scroller.setAttribute(
       "style",
-      "display:flex;align-items:stretch;margin:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;font-size:0;line-height:0",
+      `display:flex;align-items:stretch;margin:0;padding:${shadowBlockStartInset}px 0 ${shadowBlockEndInset}px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;font-size:0;line-height:0`,
     )
     candidates[0].container.before(group)
     group.append(hint, scroller)
     images.forEach((image, index) => {
+      const isFirst = index === 0
+      const isLast = index === images.length - 1
+      const marginLeft = isFirst ? shadowInlineInset : 0
+      const marginRight = isLast ? shadowInlineInset : 12
       const frame = doc.createElement("section")
       frame.setAttribute(
         "style",
-        `display:flex;flex:0 0 86%;max-width:86%;min-width:0;flex-direction:column;margin:0 ${index === images.length - 1 ? "0" : "12px"} 0 0;vertical-align:top;box-sizing:border-box;white-space:normal`,
+        `display:flex;flex:0 0 86%;max-width:86%;min-width:0;flex-direction:column;margin:0 ${marginRight}px 0 ${marginLeft}px;vertical-align:top;box-sizing:border-box;white-space:normal`,
       )
       const media = doc.createElement("section")
       media.setAttribute(
@@ -1212,6 +1230,8 @@ function applyArticleLayoutSettings(
   doc: Document,
   settings: ArticleLayoutSettings,
   tokens: RenderTokens,
+  contentInset: number,
+  preserveImageShadow: boolean,
 ) {
   const captionableImages = new Set(
     Array.from(root.children).flatMap(standaloneImages),
@@ -1293,7 +1313,13 @@ function applyArticleLayoutSettings(
   })
   const galleryFrames =
     settings.imageLayout === "scroll"
-      ? groupScrollableImages(root, doc, tokens)
+      ? groupScrollableImages(
+          root,
+          doc,
+          tokens,
+          contentInset,
+          preserveImageShadow,
+        )
       : new Map<Element, { frame: HTMLElement; media: HTMLElement }>()
   applyImageCaptions(
     captionableImages,
@@ -1378,7 +1404,14 @@ export function inlineDocument(
   })
 
   renderer.decorate({ doc, root, styles, tokens })
-  applyArticleLayoutSettings(root, doc, settings, tokens)
+  applyArticleLayoutSettings(
+    root,
+    doc,
+    settings,
+    tokens,
+    styles.contentInset,
+    getThemeRendererContract(theme).output.image.shadow,
+  )
   root
     .querySelectorAll("pre")
     .forEach((node) => node.removeAttribute("data-language"))

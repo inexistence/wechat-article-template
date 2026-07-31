@@ -127,7 +127,14 @@ try {
       fail(`renderer "${rendererId}" cannot resolve its own contract`)
     }
 
-    const baseStyles = JSON.stringify(getArticleStyles(theme))
+    const rendererStyles = getArticleStyles(theme)
+    if (
+      !Number.isFinite(rendererStyles.contentInset) ||
+      rendererStyles.contentInset < 0
+    ) {
+      fail(`renderer "${rendererId}" declares an invalid content inset`)
+    }
+    const baseStyles = JSON.stringify(rendererStyles)
     for (const control of THEME_CONTROLS) {
       const capability = contract.capabilities[control]
       const changedStyles = JSON.stringify(
@@ -378,6 +385,9 @@ try {
   }
 
   for (const [rendererId, theme] of Object.entries(themesByRenderer)) {
+    const rendererStyles = getArticleStyles(theme)
+    const preservesImageShadow =
+      THEME_RENDERER_CONTRACTS[rendererId].output.image.shadow
     const output = inlineDocument(fixtureHtml, theme, {
       ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
       imageLayout: "scroll",
@@ -414,6 +424,10 @@ try {
       gallery.previousElementSibling,
       `renderer "${rendererId}" image gallery has no scroll hint`,
     )
+    const galleryGroup = requireElement(
+      gallery.parentElement,
+      `renderer "${rendererId}" image gallery has no group`,
+    )
     if (
       imageFrames.some((frame) => frame.parentElement !== gallery) ||
       !styleOf(gallery).includes("overflow-x:auto") ||
@@ -437,6 +451,28 @@ try {
       )
     ) {
       fail(`renderer "${rendererId}" ignored horizontal image layout`)
+    }
+    if (
+      !styleOf(galleryGroup).includes(
+        `margin:1.8em ${rendererStyles.contentInset}px`,
+      )
+    ) {
+      fail(`renderer "${rendererId}" image gallery needs content insets`)
+    }
+    const expectedShadowStartInset = preservesImageShadow ? 16 : 0
+    const expectedShadowEndInset = preservesImageShadow ? 36 : 0
+    if (
+      !styleOf(gallery).includes(
+        `padding:${expectedShadowStartInset}px 0 ${expectedShadowEndInset}px`,
+      ) ||
+      !styleOf(imageFrames[0]).includes(
+        `margin:0 12px 0 ${expectedShadowStartInset}px`,
+      ) ||
+      !styleOf(imageFrames.at(-1)).includes(
+        `margin:0 ${expectedShadowStartInset}px 0 0px`,
+      )
+    ) {
+      fail(`renderer "${rendererId}" image gallery clips image effects`)
     }
   }
 
