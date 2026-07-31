@@ -1,0 +1,24 @@
+index.html
+  s_d738719ff5334e::t_0ffadb6040d9ae 8-9
+src/App.tsx
+  s_d738719ff5334e::t_92721746b8b018 629-636
+src/index.css
+  s_d738719ff5334e::t_87debac47e0fb4 132,137-139,141-143,149
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "3c02766734226bcbddcf07d5ba3a2aae26d19c2f",
+  "prompts": {},
+  "logical_commit_id": "3c02766734226bcbddcf07d5ba3a2aae26d19c2f",
+  "sessions": {
+    "s_d738719ff5334e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb72a-6632-7280-9be5-9861e231f831",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
