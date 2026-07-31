@@ -627,7 +627,7 @@ export default function App() {
       <header className="app-header">
         <a className="wordmark" href="#" aria-label="排版间首页">
           <img
-            src="/brand/logo-mark-192.png"
+            src="/brand/logo-mark.svg"
             alt=""
             width="28"
             height="28"
