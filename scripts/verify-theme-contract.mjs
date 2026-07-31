@@ -51,7 +51,11 @@ const message = "hello";
 console.log(message);
 \`\`\`
 
-![Preview](https://example.com/preview.png)`
+![Preview one](https://example.com/preview-1.png)
+
+![Preview two](https://example.com/preview-2.png)
+
+![Preview three](https://example.com/preview-3.png)`
 
 const mutateThemeControl = (theme, control) => {
   const next = structuredClone(theme)
@@ -347,8 +351,39 @@ try {
     }
   }
 
+  for (const [rendererId, theme] of Object.entries(themesByRenderer)) {
+    const output = inlineDocument(fixtureHtml, theme, {
+      ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+      imageLayout: "scroll",
+    })
+    const document = new DOMParser().parseFromString(
+      `<html><body>${output}</body></html>`,
+      "text/html",
+    )
+    const root = requireElement(
+      document.body.firstElementChild,
+      `renderer "${rendererId}" produced no image layout fixture root`,
+    )
+    const images = Array.from(root.querySelectorAll("img"))
+    if (images.length !== 3) {
+      fail(`renderer "${rendererId}" image gallery lost images`)
+    }
+    const gallery = requireElement(
+      images[0].parentElement,
+      `renderer "${rendererId}" image gallery has no container`,
+    )
+    if (
+      images.some((image) => image.parentElement !== gallery) ||
+      !styleOf(gallery).includes("overflow-x:auto") ||
+      !styleOf(gallery).includes("white-space:nowrap") ||
+      images.some((image) => !styleOf(image).includes("width:88%"))
+    ) {
+      fail(`renderer "${rendererId}" ignored horizontal image layout`)
+    }
+  }
+
   console.log(
-    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls + output and layout invariants`,
+    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls + output, layout and gallery invariants`,
   )
 } finally {
   await server.close()

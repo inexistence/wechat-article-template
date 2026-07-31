@@ -1093,6 +1093,17 @@ textarea {
   font-weight: 550;
 }
 
+.setting-dependent {
+  margin-top: 18px;
+}
+
+.setting-hint {
+  margin-bottom: 0;
+  color: var(--muted-foreground);
+  font-size: 10px;
+  line-height: 1.7;
+}
+
 .choice-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

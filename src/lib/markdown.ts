@@ -1026,6 +1026,65 @@ function appendInlineStyle(element: Element, style: string) {
   element.setAttribute("style", current ? `${current};${style}` : style)
 }
 
+function standaloneImages(element: Element) {
+  if (element.tagName === "IMG") return [element]
+  if (element.tagName !== "P") return []
+
+  const images = Array.from(element.children).filter(
+    (child) => child.tagName === "IMG",
+  )
+  if (images.length === 0) return []
+
+  const containsOtherContent = Array.from(element.childNodes).some((node) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return Boolean(node.textContent?.trim())
+    }
+    return node.nodeType !== Node.ELEMENT_NODE ||
+      (node as Element).tagName !== "IMG"
+  })
+  return containsOtherContent ? [] : images
+}
+
+function groupScrollableImages(root: HTMLElement, doc: Document) {
+  let candidates: { container: Element; images: Element[] }[] = []
+
+  const flush = () => {
+    const images = candidates.flatMap((candidate) => candidate.images)
+    if (images.length < 2) {
+      candidates = []
+      return
+    }
+
+    const wrapper = doc.createElement("section")
+    wrapper.setAttribute(
+      "style",
+      "margin:1.8em 0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;font-size:0;line-height:0",
+    )
+    candidates[0].container.before(wrapper)
+    images.forEach((image, index) => {
+      appendInlineStyle(
+        image,
+        `display:inline-block;width:88%;max-width:88%;height:auto;margin:0 ${index === images.length - 1 ? "0" : "12px"} 0 0;vertical-align:top;box-sizing:border-box;white-space:normal`,
+      )
+      wrapper.append(image)
+    })
+    candidates.forEach(({ container }) => {
+      if (container.tagName !== "IMG") container.remove()
+    })
+    candidates = []
+  }
+
+  Array.from(root.children).forEach((element) => {
+    const images = standaloneImages(element)
+    if (images.length === 0) {
+      flush()
+      return
+    }
+    candidates.push({ container: element, images })
+  })
+  flush()
+}
+
 function applyArticleLayoutSettings(
   root: HTMLElement,
   doc: Document,
@@ -1106,6 +1165,9 @@ function applyArticleLayoutSettings(
         : "width:auto",
     )
   })
+  if (settings.imageLayout === "scroll") {
+    groupScrollableImages(root, doc)
+  }
 }
 
 export function getArticleStyles(theme: ArticleTheme) {

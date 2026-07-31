@@ -93,12 +93,16 @@ const PREVIEW_WIDTHS: { value: PreviewWidth; label: string }[] = [
 ]
 const COLOR_THEME_CONTROLS = ["accent", "text", "paper"] as const
 
+type PersistedLayoutSettings = Omit<ArticleLayoutSettings, "imageLayout"> & {
+  imageLayout?: ArticleLayoutSettings["imageLayout"]
+}
+
 type SavedDocument = {
   markdown: string
   title: string
   selectedThemeId: string
   activeTheme: ArticleTheme
-  layoutSettings?: ArticleLayoutSettings
+  layoutSettings?: PersistedLayoutSettings
   themeVersion?: number
 }
 
@@ -141,7 +145,7 @@ function isArticleTheme(value: unknown): value is ArticleTheme {
 
 function isArticleLayoutSettings(
   value: unknown,
-): value is ArticleLayoutSettings {
+): value is PersistedLayoutSettings {
   if (!isRecord(value)) return false
 
   return (
@@ -152,6 +156,9 @@ function isArticleLayoutSettings(
     (value.paragraphSpacing === "compact" ||
       value.paragraphSpacing === "standard" ||
       value.paragraphSpacing === "relaxed") &&
+    (value.imageLayout === undefined ||
+      value.imageLayout === "stack" ||
+      value.imageLayout === "scroll") &&
     (value.imageWidth === "natural" || value.imageWidth === "full")
   )
 }
@@ -173,7 +180,12 @@ function isSavedDocument(value: unknown): value is SavedDocument {
 function getInitialLayoutSettings(
   saved: SavedDocument | null,
 ): ArticleLayoutSettings {
-  if (saved?.layoutSettings) return saved.layoutSettings
+  if (saved?.layoutSettings) {
+    return {
+      ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+      ...saved.layoutSettings,
+    }
+  }
 
   const renderer = saved?.activeTheme.renderer
   return {
@@ -704,7 +716,7 @@ export default function App() {
       <header className="app-header">
         <a className="wordmark" href="#" aria-label="排版间首页">
           <img
-            src="/brand/logo-mark.svg"
+            src={`${import.meta.env.BASE_URL}brand/logo-mark.svg`}
             alt=""
             width="28"
             height="28"
@@ -1275,19 +1287,57 @@ export default function App() {
                 }
               />
               <SettingChoice
-                label="图片宽度"
-                value={layoutSettings.imageWidth}
+                label="图片布局"
+                value={layoutSettings.imageLayout}
                 options={[
-                  { value: "natural", label: "适应原图" },
-                  { value: "full", label: "撑满正文" },
+                  { value: "stack", label: "普通排列" },
+                  { value: "scroll", label: "横向滑动" },
                 ]}
-                onChange={(imageWidth) =>
+                onChange={(imageLayout) =>
                   setLayoutSettings((settings) => ({
                     ...settings,
-                    imageWidth,
+                    imageLayout,
                   }))
                 }
               />
+              <AnimatePresence initial={false} mode="wait">
+                {layoutSettings.imageLayout === "stack" ? (
+                  <motion.div
+                    key="image-width"
+                    className="setting-dependent"
+                    initial={{ opacity: 0, y: -3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -3 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    <SettingChoice
+                      label="图片宽度"
+                      value={layoutSettings.imageWidth}
+                      options={[
+                        { value: "natural", label: "适应原图" },
+                        { value: "full", label: "撑满正文" },
+                      ]}
+                      onChange={(imageWidth) =>
+                        setLayoutSettings((settings) => ({
+                          ...settings,
+                          imageWidth,
+                        }))
+                      }
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.p
+                    key="image-scroll-note"
+                    className="setting-dependent setting-hint"
+                    initial={{ opacity: 0, y: -3 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -3 }}
+                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                  >
+                    连续两张以上图片会组成横滑图组，单张图片保持原样。
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </section>
 
             {themeContract.structureNote && (

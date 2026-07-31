@@ -6,6 +6,7 @@ export type ContentOverflow = "wrap" | "scroll"
 export type ParagraphAlign = "left" | "justify"
 export type ParagraphSpacing = "compact" | "standard" | "relaxed"
 export type ImageWidth = "natural" | "full"
+export type ImageLayout = "stack" | "scroll"
 
 export type ArticleLayoutSettings = {
   tableOverflow: ContentOverflow
@@ -13,6 +14,7 @@ export type ArticleLayoutSettings = {
   paragraphAlign: ParagraphAlign
   firstLineIndent: boolean
   paragraphSpacing: ParagraphSpacing
+  imageLayout: ImageLayout
   imageWidth: ImageWidth
 }
 
@@ -22,6 +24,7 @@ export const DEFAULT_ARTICLE_LAYOUT_SETTINGS: ArticleLayoutSettings = {
   paragraphAlign: "justify",
   firstLineIndent: false,
   paragraphSpacing: "standard",
+  imageLayout: "stack",
   imageWidth: "natural",
 }
 
