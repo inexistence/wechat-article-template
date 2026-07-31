@@ -31,6 +31,14 @@ export const DEFAULT_MARKDOWN = `# 让内容更好读
 3. 选择适合内容的模板
 4. 复制到公众号后台
 
+### 图片也参与节奏
+
+![在纸上记录想法](./images/article-samples/writing-notes.webp "横向图片 · 1200 × 720")
+
+![简洁的创作工作台](./images/article-samples/creative-workspace.webp "竖向图片 · 720 × 960")
+
+![书籍与阅读](./images/article-samples/reading-books.webp "方形图片 · 900 × 900")
+
 ---
 
 ## 让重点自然出现 \`02\`
@@ -77,7 +85,7 @@ function escapeHtml(value: string) {
 
 function safeUrl(value: string) {
   const trimmed = value.trim()
-  return /^(https?:\/\/|mailto:|tel:|#)/i.test(trimmed)
+  return /^(https?:\/\/|mailto:|tel:|#|\.\/|\/(?!\/))/i.test(trimmed)
     ? escapeHtml(trimmed)
     : "#"
 }
@@ -270,6 +278,22 @@ export function markdownToHtml(markdown: string) {
   flushParagraph()
   flushList()
   return output.join("")
+}
+
+export function absolutizeRelativeImageSources(html: string, baseUrl: string) {
+  const document = new DOMParser().parseFromString(
+    `<html><body>${html}</body></html>`,
+    "text/html",
+  )
+
+  document.body.querySelectorAll("img[src]").forEach((image) => {
+    const source = image.getAttribute("src")
+    if (!source || !/^(?:\.\/|\/(?!\/))/.test(source)) return
+
+    image.setAttribute("src", new URL(source, baseUrl).href)
+  })
+
+  return document.body.innerHTML
 }
 
 export type ArticleStyles = {
@@ -1053,7 +1077,10 @@ function groupScrollableImages(
   tokens: RenderTokens,
 ) {
   let candidates: { container: Element; images: Element[] }[] = []
-  const galleries = new Set<Element>()
+  const galleryFrames = new Map<
+    Element,
+    { frame: HTMLElement; media: HTMLElement }
+  >()
 
   const flush = () => {
     const images = candidates.flatMap((candidate) => candidate.images)
@@ -1083,17 +1110,29 @@ function groupScrollableImages(
     const scroller = doc.createElement("section")
     scroller.setAttribute(
       "style",
-      "margin:0;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;font-size:0;line-height:0",
+      "display:flex;align-items:stretch;margin:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;font-size:0;line-height:0",
     )
-    galleries.add(scroller)
     candidates[0].container.before(group)
     group.append(hint, scroller)
     images.forEach((image, index) => {
+      const frame = doc.createElement("section")
+      frame.setAttribute(
+        "style",
+        `display:flex;flex:0 0 86%;max-width:86%;min-width:0;flex-direction:column;margin:0 ${index === images.length - 1 ? "0" : "12px"} 0 0;vertical-align:top;box-sizing:border-box;white-space:normal`,
+      )
+      const media = doc.createElement("section")
+      media.setAttribute(
+        "style",
+        "display:flex;flex:1 1 auto;align-items:center;justify-content:center;min-height:0;margin:0;padding:0",
+      )
       appendInlineStyle(
         image,
-        `display:inline-block;width:88%;max-width:88%;height:auto;margin:0 ${index === images.length - 1 ? "0" : "12px"} 0 0;vertical-align:top;box-sizing:border-box;white-space:normal`,
+        "display:block;width:100%;max-width:100%;height:auto;margin:0;vertical-align:middle;box-sizing:border-box;white-space:normal",
       )
-      scroller.append(image)
+      media.append(image)
+      frame.append(media)
+      scroller.append(frame)
+      galleryFrames.set(image, { frame, media })
     })
     candidates.forEach(({ container }) => {
       if (container.tagName !== "IMG") container.remove()
@@ -1110,7 +1149,7 @@ function groupScrollableImages(
     candidates.push({ container: element, images })
   })
   flush()
-  return galleries
+  return galleryFrames
 }
 
 function getImageCaption(image: Element) {
@@ -1121,7 +1160,10 @@ function getImageCaption(image: Element) {
 
 function applyImageCaptions(
   images: Set<Element>,
-  galleries: Set<Element>,
+  galleryFrames: Map<
+    Element,
+    { frame: HTMLElement; media: HTMLElement }
+  >,
   doc: Document,
   settings: ArticleLayoutSettings,
   tokens: RenderTokens,
@@ -1153,25 +1195,10 @@ function applyImageCaptions(
     caption.textContent = captionText
     caption.setAttribute("style", captionStyle)
 
-    const gallery = galleries.has(image.parentElement as Element)
-      ? image.parentElement
-      : null
-    if (gallery) {
-      const galleryImages = Array.from(gallery.children).filter(
-        (child) => child.tagName === "IMG",
-      )
-      const imageIndex = galleryImages.indexOf(image)
-      const frame = doc.createElement("section")
-      frame.setAttribute(
-        "style",
-        `display:inline-block;width:88%;max-width:88%;margin:0 ${imageIndex === galleryImages.length - 1 ? "0" : "12px"} 0 0;vertical-align:top;box-sizing:border-box;white-space:normal`,
-      )
-      image.before(frame)
-      frame.append(image, caption)
-      appendInlineStyle(
-        image,
-        "display:block;width:100%;max-width:100%;height:auto;margin:0 0 8px;vertical-align:top;box-sizing:border-box",
-      )
+    const galleryFrame = galleryFrames.get(image)
+    if (galleryFrame) {
+      appendInlineStyle(caption, "flex:0 0 auto;margin-top:8px")
+      galleryFrame.frame.append(caption)
       return
     }
 
@@ -1264,11 +1291,17 @@ function applyArticleLayoutSettings(
         : "width:auto",
     )
   })
-  const galleries =
+  const galleryFrames =
     settings.imageLayout === "scroll"
       ? groupScrollableImages(root, doc, tokens)
-      : new Set<Element>()
-  applyImageCaptions(captionableImages, galleries, doc, settings, tokens)
+      : new Map<Element, { frame: HTMLElement; media: HTMLElement }>()
+  applyImageCaptions(
+    captionableImages,
+    galleryFrames,
+    doc,
+    settings,
+    tokens,
+  )
 }
 
 export function getArticleStyles(theme: ArticleTheme) {

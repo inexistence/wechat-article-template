@@ -59,6 +59,7 @@ import { Toaster } from "@/components/ui/sonner"
 import { Textarea } from "@/components/ui/textarea"
 import {
   DEFAULT_MARKDOWN,
+  absolutizeRelativeImageSources,
   inlineDocument,
   markdownToHtml,
 } from "@/lib/markdown"
@@ -531,15 +532,19 @@ export default function App() {
   }
 
   const copyRichText = async () => {
+    const clipboardHtml = absolutizeRelativeImageSources(
+      finalHtml,
+      document.baseURI,
+    )
     const plain = new DOMParser()
-      .parseFromString(finalHtml, "text/html")
+      .parseFromString(clipboardHtml, "text/html")
       .body.innerText
       .replaceAll("\u00a0", " ")
     try {
       if (window.ClipboardItem && navigator.clipboard?.write) {
         await navigator.clipboard.write([
           new ClipboardItem({
-            "text/html": new Blob([finalHtml], { type: "text/html" }),
+            "text/html": new Blob([clipboardHtml], { type: "text/html" }),
             "text/plain": new Blob([plain], { type: "text/plain" }),
           }),
         ])
@@ -548,7 +553,7 @@ export default function App() {
         container.contentEditable = "true"
         container.style.position = "fixed"
         container.style.left = "-9999px"
-        container.innerHTML = finalHtml
+        container.innerHTML = clipboardHtml
         document.body.appendChild(container)
         const selection = window.getSelection()
         try {

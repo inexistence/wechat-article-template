@@ -94,7 +94,12 @@ try {
     THEME_RENDERER_CONTRACTS,
     getThemeRendererContract,
   } = themeModule
-  const { getArticleStyles, inlineDocument, markdownToHtml } = markdownModule
+  const {
+    absolutizeRelativeImageSources,
+    getArticleStyles,
+    inlineDocument,
+    markdownToHtml,
+  } = markdownModule
 
   const themesByRenderer = {
     default: BUILTIN_THEMES.clean,
@@ -388,9 +393,15 @@ try {
     if (images.length !== 3) {
       fail(`renderer "${rendererId}" image gallery lost images`)
     }
-    const imageFrames = images.map((image) =>
+    const imageMedia = images.map((image) =>
       requireElement(
         image.parentElement,
+        `renderer "${rendererId}" gallery image has no media region`,
+      ),
+    )
+    const imageFrames = imageMedia.map((media) =>
+      requireElement(
+        media.parentElement,
         `renderer "${rendererId}" gallery image has no frame`,
       ),
     )
@@ -405,12 +416,24 @@ try {
     if (
       imageFrames.some((frame) => frame.parentElement !== gallery) ||
       !styleOf(gallery).includes("overflow-x:auto") ||
-      !styleOf(gallery).includes("white-space:nowrap") ||
+      !styleOf(gallery).includes("display:flex") ||
+      !styleOf(gallery).includes("align-items:stretch") ||
       !galleryHint.textContent.includes("左右滑动查看 · 共 3 张") ||
       !galleryHint.textContent.includes("→") ||
-      imageFrames.some((frame) => !styleOf(frame).includes("width:88%")) ||
+      imageFrames.some(
+        (frame) =>
+          !styleOf(frame).includes("flex:0 0 86%") ||
+          !styleOf(frame).includes("flex-direction:column"),
+      ) ||
+      imageMedia.some(
+        (media) =>
+          !styleOf(media).includes("flex:1 1 auto") ||
+          !styleOf(media).includes("align-items:center"),
+      ) ||
       images.some((image) => !styleOf(image).includes("width:100%")) ||
-      images.some((image) => !image.nextElementSibling?.textContent?.trim())
+      imageFrames.some(
+        (frame) => !frame.lastElementChild?.textContent?.trim(),
+      )
     ) {
       fail(`renderer "${rendererId}" ignored horizontal image layout`)
     }
@@ -436,8 +459,36 @@ try {
     fail("hidden image captions still render visible content")
   }
 
+  const clipboardHtml = absolutizeRelativeImageSources(
+    markdownToHtml(`![Relative](./images/relative.png)
+
+![Root](/images/root.png)
+
+![Remote](https://cdn.example.com/remote.png)`),
+    "https://example.com/tools/editor/",
+  )
+  const clipboardDocument = new DOMParser().parseFromString(
+    `<html><body>${clipboardHtml}</body></html>`,
+    "text/html",
+  )
+  const clipboardSources = Array.from(
+    clipboardDocument.body.querySelectorAll("img"),
+    (image) => image.getAttribute("src"),
+  )
+  const expectedClipboardSources = [
+    "https://example.com/tools/editor/images/relative.png",
+    "https://example.com/images/root.png",
+    "https://cdn.example.com/remote.png",
+  ]
+  if (
+    JSON.stringify(clipboardSources) !==
+    JSON.stringify(expectedClipboardSources)
+  ) {
+    fail("clipboard HTML did not resolve relative image sources")
+  }
+
   console.log(
-    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls + output, layout and gallery invariants`,
+    `Theme contracts verified: ${Object.keys(THEME_RENDERER_CONTRACTS).length} renderers × ${THEME_CONTROLS.length} controls + output, layout, gallery and clipboard invariants`,
   )
 } finally {
   await server.close()
