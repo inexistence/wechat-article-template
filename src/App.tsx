@@ -47,16 +47,23 @@ import { Input } from "@/components/ui/input"
 import { Slider } from "@/components/ui/slider"
 import { Toaster } from "@/components/ui/sonner"
 import { Textarea } from "@/components/ui/textarea"
-import { cn } from "@/lib/utils"
 import {
-  BUILTIN_THEMES,
   DEFAULT_MARKDOWN,
   inlineDocument,
   markdownToHtml,
+} from "@/lib/markdown"
+import {
+  BUILTIN_THEMES,
+  THEME_CONTROL_LABELS,
+  canEditThemeControl,
+  getThemeRendererContract,
+  isThemeRenderer,
   type ArticleTheme,
   type FontFamily,
   type HeadingStyle,
-} from "@/lib/markdown"
+  type ThemeControl,
+} from "@/lib/theme"
+import { cn } from "@/lib/utils"
 
 const DOCUMENT_KEY = "paibanjian-react-document-v3"
 const CUSTOM_THEMES_KEY = "paibanjian-react-themes-v3"
@@ -72,6 +79,7 @@ const PREVIEW_WIDTHS: { value: PreviewWidth; label: string }[] = [
   { value: 375, label: "标准" },
   { value: 420, label: "宽屏" },
 ]
+const COLOR_THEME_CONTROLS = ["accent", "text", "paper"] as const
 
 type SavedDocument = {
   markdown: string
@@ -114,9 +122,7 @@ function isArticleTheme(value: unknown): value is ArticleTheme {
       value.fontFamily === "serif" ||
       value.fontFamily === "rounded") &&
     (value.secondary === undefined || typeof value.secondary === "string") &&
-    (value.renderer === undefined ||
-      value.renderer === "island-log" ||
-      value.renderer === "juya-daily")
+    (value.renderer === undefined || isThemeRenderer(value.renderer))
   )
 }
 
@@ -300,6 +306,15 @@ export default function App() {
     }),
     [customThemes],
   )
+  const themeContract = useMemo(
+    () => getThemeRendererContract(activeTheme),
+    [activeTheme.renderer],
+  )
+  const editableColorControls = COLOR_THEME_CONTROLS.filter((control) =>
+    canEditThemeControl(themeContract, control),
+  )
+  const isControlEditable = (control: ThemeControl) =>
+    canEditThemeControl(themeContract, control)
 
   const finalHtml = useMemo(
     () => inlineDocument(markdownToHtml(markdown), activeTheme),
@@ -998,80 +1013,83 @@ export default function App() {
           </SheetHeader>
 
           <div className="settings-scroll">
-            <section className="setting-section">
-              <h3>颜色</h3>
-              <div className="color-settings">
-                {[
-                  ["强调色", "accent"],
-                  ["文字", "text"],
-                  ["纸张", "paper"],
-                ].map(([label, key]) => (
-                  <label key={key}>
-                    <span>{label}</span>
-                    <input
-                      type="color"
-                      value={activeTheme[key as "accent" | "text" | "paper"]}
-                      onChange={(event) =>
-                        updateTheme(
-                          key as "accent" | "text" | "paper",
-                          event.target.value,
-                        )
-                      }
-                    />
-                  </label>
-                ))}
-              </div>
-            </section>
+            {editableColorControls.length > 0 && (
+              <section className="setting-section">
+                <h3>颜色</h3>
+                <div className="color-settings">
+                  {editableColorControls.map((key) => (
+                    <label key={key}>
+                      <span>{THEME_CONTROL_LABELS[key]}</span>
+                      <input
+                        type="color"
+                        value={activeTheme[key]}
+                        onChange={(event) =>
+                          updateTheme(key, event.target.value)
+                        }
+                      />
+                    </label>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="setting-section">
               <h3>阅读参数</h3>
-              <SettingSlider
-                label="正文字号"
-                value={activeTheme.fontSize}
-                display={`${activeTheme.fontSize}px`}
-                min={14}
-                max={19}
-                onChange={(value) => updateTheme("fontSize", value)}
-              />
-              <SettingSlider
-                label="正文行高"
-                value={activeTheme.lineHeight}
-                display={activeTheme.lineHeight.toFixed(1)}
-                min={1.5}
-                max={2.3}
-                step={0.1}
-                onChange={(value) => updateTheme("lineHeight", value)}
-              />
-              <SettingSlider
-                label="内容留白"
-                value={activeTheme.spacing}
-                display={`${activeTheme.spacing}px`}
-                min={14}
-                max={36}
-                step={2}
-                onChange={(value) => updateTheme("spacing", value)}
-              />
-              <SettingSlider
-                label="圆角"
-                value={activeTheme.radius}
-                display={`${activeTheme.radius}px`}
-                min={0}
-                max={20}
-                step={2}
-                onChange={(value) => updateTheme("radius", value)}
-              />
+              {isControlEditable("fontSize") && (
+                <SettingSlider
+                  label={THEME_CONTROL_LABELS.fontSize}
+                  value={activeTheme.fontSize}
+                  display={`${activeTheme.fontSize}px`}
+                  min={14}
+                  max={19}
+                  onChange={(value) => updateTheme("fontSize", value)}
+                />
+              )}
+              {isControlEditable("lineHeight") && (
+                <SettingSlider
+                  label={THEME_CONTROL_LABELS.lineHeight}
+                  value={activeTheme.lineHeight}
+                  display={activeTheme.lineHeight.toFixed(1)}
+                  min={1.5}
+                  max={2.3}
+                  step={0.1}
+                  onChange={(value) => updateTheme("lineHeight", value)}
+                />
+              )}
+              {isControlEditable("spacing") && (
+                <SettingSlider
+                  label={THEME_CONTROL_LABELS.spacing}
+                  value={activeTheme.spacing}
+                  display={`${activeTheme.spacing}px`}
+                  min={14}
+                  max={36}
+                  step={2}
+                  onChange={(value) => updateTheme("spacing", value)}
+                />
+              )}
+              {isControlEditable("radius") && (
+                <SettingSlider
+                  label={THEME_CONTROL_LABELS.radius}
+                  value={activeTheme.radius}
+                  display={`${activeTheme.radius}px`}
+                  min={0}
+                  max={20}
+                  step={2}
+                  onChange={(value) => updateTheme("radius", value)}
+                />
+              )}
             </section>
 
-            {activeTheme.renderer ? (
+            {themeContract.structureNote && (
               <section className="setting-section">
                 <h3>模板结构</h3>
                 <p className="structure-note">
-                  {activeTheme.renderer === "island-log"
-                    ? "叶片标题、手写引用和点状分隔是这套模板的固定结构。颜色、字体、字号和阅读参数仍可调整。"
-                    : "米色圆角标题、标签式编号和虚线分隔是这套日报模板的固定结构。颜色、字体、字号和阅读参数仍可调整。"}
+                  {themeContract.structureNote}
                 </p>
               </section>
-            ) : (
+            )}
+
+            {isControlEditable("headingStyle") && (
               <section className="setting-section">
                 <h3>标题造型</h3>
                 <div className="choice-grid">
@@ -1101,29 +1119,35 @@ export default function App() {
               </section>
             )}
 
-            <section className="setting-section">
-              <h3>字体气质</h3>
-              <div className="choice-grid">
-                {(
-                  [
-                    ["sans", "现代"],
-                    ["serif", "人文"],
-                    ["rounded", "圆润"],
-                  ] as [FontFamily, string][]
-                ).map(([value, label]) => (
-                  <Button
-                    key={value}
-                    type="button"
-                    variant={activeTheme.fontFamily === value ? "secondary" : "outline"}
-                    hoverScale={1.015}
-                    tapScale={0.98}
-                    onClick={() => updateTheme("fontFamily", value)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </section>
+            {isControlEditable("fontFamily") && (
+              <section className="setting-section">
+                <h3>字体气质</h3>
+                <div className="choice-grid">
+                  {(
+                    [
+                      ["sans", "现代"],
+                      ["serif", "人文"],
+                      ["rounded", "圆润"],
+                    ] as [FontFamily, string][]
+                  ).map(([value, label]) => (
+                    <Button
+                      key={value}
+                      type="button"
+                      variant={
+                        activeTheme.fontFamily === value
+                          ? "secondary"
+                          : "outline"
+                      }
+                      hoverScale={1.015}
+                      tapScale={0.98}
+                      onClick={() => updateTheme("fontFamily", value)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
           <SheetFooter className="sheet-footer">

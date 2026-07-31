@@ -1,24 +1,10 @@
-export type HeadingStyle = "bar" | "underline" | "label"
-export type FontFamily = "sans" | "serif" | "rounded"
-
-export type ArticleTheme = {
-  id: string
-  name: string
-  description: string
-  accent: string
-  text: string
-  paper: string
-  quote: string
-  code: string
-  fontSize: number
-  lineHeight: number
-  spacing: number
-  radius: number
-  headingStyle: HeadingStyle
-  fontFamily: FontFamily
-  secondary?: string
-  renderer?: "island-log" | "juya-daily"
-}
+import {
+  getThemeRendererId,
+  resolveThemeTokens,
+  type ArticleTheme,
+  type RenderTokens,
+  type ThemeRendererId,
+} from "@/lib/theme"
 
 export const DEFAULT_MARKDOWN = `# 让内容更好读
 
@@ -76,93 +62,6 @@ console.log(content + " × " + layout);
 \`\`\`
 
 > 现在，替换这些文字，开始你的文章。`
-
-export const BUILTIN_THEMES: Record<string, ArticleTheme> = {
-  clean: {
-    id: "clean",
-    name: "留白",
-    description: "清晰 · 通用",
-    accent: "#1f1f1f",
-    text: "#262626",
-    paper: "#ffffff",
-    quote: "#f3f3f3",
-    code: "#1f1f1f",
-    fontSize: 16,
-    lineHeight: 1.9,
-    spacing: 24,
-    radius: 6,
-    headingStyle: "bar",
-    fontFamily: "sans",
-  },
-  essay: {
-    id: "essay",
-    name: "文墨",
-    description: "温和 · 人文",
-    accent: "#9a543f",
-    text: "#332f2b",
-    paper: "#fffdf8",
-    quote: "#f5f0e8",
-    code: "#2e2b28",
-    fontSize: 16,
-    lineHeight: 2,
-    spacing: 26,
-    radius: 2,
-    headingStyle: "underline",
-    fontFamily: "serif",
-  },
-  brief: {
-    id: "brief",
-    name: "简报",
-    description: "理性 · 紧凑",
-    accent: "#315f8c",
-    text: "#202830",
-    paper: "#ffffff",
-    quote: "#eef3f7",
-    code: "#1d2730",
-    fontSize: 15,
-    lineHeight: 1.82,
-    spacing: 22,
-    radius: 4,
-    headingStyle: "label",
-    fontFamily: "sans",
-  },
-  island: {
-    id: "island",
-    name: "岛屿",
-    description: "暖纸 · 手作",
-    accent: "#4f9f70",
-    secondary: "#f7cd67",
-    text: "#654c36",
-    paper: "#fffaf0",
-    quote: "#e9f5e9",
-    code: "#2b2118",
-    fontSize: 16,
-    lineHeight: 1.95,
-    spacing: 26,
-    radius: 18,
-    headingStyle: "bar",
-    fontFamily: "rounded",
-    renderer: "island-log",
-  },
-  juya: {
-    id: "juya",
-    name: "橘鸦",
-    description: "日报 · 清爽",
-    accent: "#c96442",
-    secondary: "#a0f9b0",
-    text: "#141413",
-    paper: "#faf9f5",
-    quote: "#f0eee6",
-    code: "#ffffff",
-    fontSize: 15,
-    lineHeight: 1.8,
-    spacing: 18,
-    radius: 12,
-    headingStyle: "underline",
-    fontFamily: "sans",
-    renderer: "juya-daily",
-  },
-}
 
 function escapeHtml(value: string) {
   return value
@@ -368,140 +267,163 @@ export function markdownToHtml(markdown: string) {
   return output.join("")
 }
 
-function fontStack(theme: ArticleTheme) {
-  if (theme.fontFamily === "serif") {
-    return '"Songti SC","STSong","Noto Serif CJK SC",serif'
-  }
-  if (theme.fontFamily === "rounded") {
-    return '"Yuanti SC","STYuanti-SC","YouYuan","Arial Rounded MT Bold","Nunito","PingFang SC","Microsoft YaHei",sans-serif'
-  }
-  return '"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif'
+export type ArticleStyles = {
+  root: string
+  h1: string
+  h2: string
+  h3: string
+  h4: string
+  p: string
+  strong: string
+  em: string
+  del: string
+  a: string
+  blockquote: string
+  ul: string
+  ol: string
+  li: string
+  hr?: string
+  pre: string
+  inlineCode: string
+  inlineLabelCode?: string
+  img: string
+  table: string
+  thead: string
+  tbody: string
+  tr: string
+  th: string
+  td: string
 }
 
-function buildStyles(theme: ArticleTheme) {
-  const family = fontStack(theme)
+function buildDefaultStyles(
+  theme: ArticleTheme,
+  tokens: RenderTokens,
+): ArticleStyles {
+  const { colors, radius, spacing, typography } = tokens
   const headingBase = [
     "margin:2.2em 0 1em",
-    `color:${theme.text}`,
-    `font-family:${family}`,
-    `font-size:${theme.fontSize + 5}px`,
+    `color:${colors.text}`,
+    `font-family:${typography.display}`,
+    `font-size:${typography.fontSize + 5}px`,
     "line-height:1.45",
     "font-weight:700",
   ]
   let h2 = ""
   if (theme.headingStyle === "bar") {
-    h2 = [...headingBase, "padding-left:12px", `border-left:3px solid ${theme.accent}`].join(";")
+    h2 = [
+      ...headingBase,
+      "padding-left:12px",
+      `border-left:3px solid ${colors.accent}`,
+    ].join(";")
   } else if (theme.headingStyle === "underline") {
     h2 = [
       ...headingBase,
       "padding-bottom:8px",
-      `border-bottom:1px solid ${theme.accent}`,
+      `border-bottom:1px solid ${colors.accent}`,
     ].join(";")
   } else {
     h2 = [
       ...headingBase,
       "display:table",
       "padding:5px 10px",
-      `color:${theme.paper}`,
-      `background:${theme.accent}`,
-      `border-radius:${theme.radius}px`,
+      `color:${colors.paper}`,
+      `background:${colors.accent}`,
+      `border-radius:${radius.md}px`,
     ].join(";")
   }
 
   return {
-    root: `padding:${theme.spacing + 8}px ${theme.spacing}px 54px;color:${theme.text};background:${theme.paper};font-family:${family};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};word-break:break-word`,
-    h1: `margin:0 0 0.7em;color:${theme.text};font-family:${family};font-size:${theme.fontSize + 11}px;line-height:1.4;letter-spacing:0.02em;font-weight:700`,
+    root: `padding:${spacing.lg}px ${spacing.md}px ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word`,
+    h1: `margin:0 0 0.7em;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 11}px;line-height:1.4;letter-spacing:0.02em;font-weight:700`,
     h2,
-    h3: `margin:2em 0 0.8em;color:${theme.accent};font-family:${family};font-size:${theme.fontSize + 2}px;line-height:1.5;font-weight:700`,
-    h4: `margin:1.6em 0 0.7em;color:${theme.text};font-size:${theme.fontSize}px;line-height:1.5;font-weight:700`,
-    p: `margin:0 0 1.25em;color:${theme.text};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};letter-spacing:0.025em;text-align:justify`,
-    strong: `color:${theme.accent};font-weight:700`,
+    h3: `margin:2em 0 0.8em;color:${colors.accent};font-family:${typography.display};font-size:${typography.fontSize + 2}px;line-height:1.5;font-weight:700`,
+    h4: `margin:1.6em 0 0.7em;color:${colors.text};font-size:${typography.fontSize}px;line-height:1.5;font-weight:700`,
+    p: `margin:0 0 1.25em;color:${colors.text};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};letter-spacing:0.025em;text-align:justify`,
+    strong: `color:${colors.accent};font-weight:700`,
     em: "font-style:italic",
     del: "opacity:0.55",
-    a: `color:${theme.accent};text-decoration:none;border-bottom:1px solid ${theme.accent}`,
-    blockquote: `margin:1.6em 0;padding:15px 17px;color:${theme.text};background:${theme.quote};border-radius:${theme.radius}px;border-left:3px solid ${theme.accent};font-size:${theme.fontSize - 1}px;line-height:${theme.lineHeight}`,
-    ul: `margin:0 0 1.4em;padding-left:1.4em;color:${theme.text};list-style-type:disc;list-style-position:outside`,
-    ol: `margin:0 0 1.4em;padding-left:1.4em;color:${theme.text};list-style-type:decimal;list-style-position:outside`,
-    li: `margin:0.4em 0;padding-left:0.2em;line-height:${theme.lineHeight}`,
-    hr: `height:1px;margin:2.4em auto;border:0;background:${theme.accent};opacity:0.25`,
-    pre: `margin:1.6em 0;padding:18px;overflow-x:auto;color:#f4f4f4;background:${theme.code};border-radius:${theme.radius}px;font-family:Menlo,Consolas,monospace;font-size:12px;line-height:1.75;white-space:pre-wrap;word-break:break-all`,
-    inlineCode: `margin:0 3px;padding:2px 5px;color:${theme.accent};background:${theme.quote};border-radius:3px;font-family:Menlo,Consolas,monospace;font-size:0.88em`,
-    img: `display:block;max-width:100%;height:auto;margin:1.8em auto;border-radius:${theme.radius}px`,
-    table: `width:100%;margin:1.8em 0;border:0!important;border-top:0!important;border-collapse:collapse;border-spacing:0;outline:0;box-shadow:none!important;background:transparent;color:${theme.text};font-size:${theme.fontSize - 2}px;line-height:1.6`,
+    a: `color:${colors.accent};text-decoration:none;border-bottom:1px solid ${colors.accent}`,
+    blockquote: `margin:1.6em 0;padding:15px 17px;color:${colors.text};background:${colors.surface};border-radius:${radius.md}px;border-left:3px solid ${colors.accent};font-size:${typography.captionSize}px;line-height:${typography.lineHeight}`,
+    ul: `margin:0 0 1.4em;padding-left:1.4em;color:${colors.text};list-style-type:disc;list-style-position:outside`,
+    ol: `margin:0 0 1.4em;padding-left:1.4em;color:${colors.text};list-style-type:decimal;list-style-position:outside`,
+    li: `margin:0.4em 0;padding-left:0.2em;line-height:${typography.lineHeight}`,
+    hr: `height:1px;margin:2.4em auto;border:0;background:${colors.accent};opacity:0.25`,
+    pre: `margin:1.6em 0;padding:18px;overflow-x:auto;color:${colors.codeForeground};background:${colors.codeBackground};border-radius:${radius.md}px;font-family:${typography.mono};font-size:${typography.codeSize}px;line-height:${typography.codeLineHeight};white-space:pre-wrap;word-break:break-all`,
+    inlineCode: `margin:0 3px;padding:2px 5px;color:${colors.accent};background:${colors.surface};border-radius:${radius.xs}px;font-family:${typography.mono};font-size:0.88em`,
+    img: `display:block;max-width:100%;height:auto;margin:1.8em auto;border-radius:${radius.md}px`,
+    table: `width:100%;margin:1.8em 0;border:0!important;border-top:0!important;border-collapse:collapse;border-spacing:0;outline:0;box-shadow:none!important;background:transparent;color:${colors.text};font-size:${typography.smallSize}px;line-height:${typography.compactLineHeight}`,
     thead: "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:transparent",
     tbody: "border:0!important;outline:0;box-shadow:none!important;background:transparent",
     tr: "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:transparent",
-    th: `padding:9px 8px;border:1px solid ${theme.accent}!important;color:${theme.paper};background:${theme.accent};font-weight:700;text-align:left;box-shadow:none!important`,
-    td: `padding:9px 8px;border:1px solid ${theme.accent}44!important;text-align:left;box-shadow:none!important`,
+    th: `padding:9px 8px;border:1px solid ${colors.accent}!important;color:${colors.paper};background:${colors.accent};font-weight:700;text-align:left;box-shadow:none!important`,
+    td: `padding:9px 8px;border:1px solid ${colors.borderStrong}!important;color:${colors.text};text-align:left;box-shadow:none!important`,
   }
 }
 
-function buildIslandStyles(theme: ArticleTheme) {
-  const family = fontStack(theme)
-  const displayFamily = fontStack(theme)
-
+function buildIslandStyles(
+  _theme: ArticleTheme,
+  tokens: RenderTokens,
+): ArticleStyles {
+  const { colors, radius, spacing, typography } = tokens
   return {
-    root: `padding:${theme.spacing + 10}px ${theme.spacing}px 56px;color:${theme.text};background:${theme.paper};font-family:${family};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};word-break:break-word`,
-    h1: `margin:0 0 0.8em;color:${theme.text};font-family:${displayFamily};font-size:${theme.fontSize + 12}px;line-height:1.32;letter-spacing:-0.025em;font-weight:900`,
-    h2: `margin:2.45em 0 0.85em;color:${theme.text};font-family:${displayFamily};font-size:${theme.fontSize + 7}px;line-height:1.35;font-weight:900`,
-    h3: `margin:2em 0 0.7em;color:${theme.text};font-family:${displayFamily};font-size:${theme.fontSize + 3}px;line-height:1.4;font-weight:800`,
-    h4: `margin:1.7em 0 0.7em;color:${theme.text};font-size:${theme.fontSize}px;line-height:1.45;font-weight:800`,
-    p: `margin:0 0 1.3em;color:${theme.text};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};letter-spacing:0.025em;text-align:justify`,
-    strong: `color:${theme.accent};font-weight:800`,
+    root: `padding:${spacing.md + 10}px ${spacing.md}px ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word`,
+    h1: `margin:0 0 0.8em;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 12}px;line-height:1.32;letter-spacing:-0.025em;font-weight:900`,
+    h2: `margin:2.45em 0 0.85em;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 7}px;line-height:1.35;font-weight:900`,
+    h3: `margin:2em 0 0.7em;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize + 3}px;line-height:1.4;font-weight:800`,
+    h4: `margin:1.7em 0 0.7em;color:${colors.text};font-size:${typography.fontSize}px;line-height:1.45;font-weight:800`,
+    p: `margin:0 0 1.3em;color:${colors.text};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};letter-spacing:0.025em;text-align:justify`,
+    strong: `color:${colors.accent};font-weight:800`,
     em: "font-style:italic",
     del: "opacity:0.55",
-    a: `color:${theme.accent};font-weight:700;text-decoration:none;border-bottom:1px solid ${theme.accent}`,
-    blockquote: `margin:1.7em 0;padding:22px 22px 22px 50px;position:relative;color:${theme.text};background:${theme.quote};border:0;border-radius:${theme.radius}px ${theme.radius + 10}px ${theme.radius + 2}px ${theme.radius + 8}px;font-size:${theme.fontSize - 1}px;line-height:${theme.lineHeight}`,
-    ul: `margin:0 0 1.4em;padding-left:1.45em;color:${theme.text};list-style-type:disc;list-style-position:outside`,
-    ol: `margin:0 0 1.4em;padding-left:1.45em;color:${theme.text};list-style-type:decimal;list-style-position:outside`,
-    li: `margin:0.45em 0;padding-left:0.2em;line-height:${theme.lineHeight}`,
-    pre: `margin:1.7em 0;padding:20px 24px;overflow-x:auto;color:#e8d5bc;background:${theme.code};border:1px solid #3d3028;border-radius:20px;font-family:"SFMono-Regular","SF Mono","Fira Code","Cascadia Code",Menlo,Consolas,monospace;font-size:13px;font-weight:600;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;tab-size:4;box-shadow:0 9px 24px rgba(43,33,24,0.1)`,
-    inlineCode: `margin:0 3px;padding:2px 5px;color:#8a4d3c;background:#efe3ca;border-radius:7px;font-family:Menlo,Consolas,monospace;font-size:0.88em`,
-    img: `display:block;max-width:100%;height:auto;margin:2em auto;border:6px solid ${theme.paper};border-radius:${theme.radius + 6}px;box-shadow:0 12px 30px rgba(76,67,52,0.12)`,
-    table: `width:100%;margin:0;border:0!important;border-top:0!important;border-collapse:separate;border-spacing:0;table-layout:fixed;outline:0;box-shadow:none!important;background:#f7f3df;color:${theme.text};font-size:${theme.fontSize - 2}px;line-height:1.65`,
-    thead: "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:#f7f3df",
-    tbody: "border:0!important;outline:0;box-shadow:none!important;background:#f7f3df",
+    a: `color:${colors.accent};font-weight:700;text-decoration:none;border-bottom:1px solid ${colors.accent}`,
+    blockquote: `margin:1.7em 0;padding:22px 22px 22px 50px;position:relative;color:${colors.text};background:${colors.surface};border:0;border-radius:${radius.md}px ${radius.xl}px ${radius.md + 2}px ${radius.md + 8}px;font-size:${typography.captionSize}px;line-height:${typography.lineHeight}`,
+    ul: `margin:0 0 1.4em;padding-left:1.45em;color:${colors.text};list-style-type:disc;list-style-position:outside`,
+    ol: `margin:0 0 1.4em;padding-left:1.45em;color:${colors.text};list-style-type:decimal;list-style-position:outside`,
+    li: `margin:0.45em 0;padding-left:0.2em;line-height:${typography.lineHeight}`,
+    pre: `margin:1.7em 0;padding:20px 24px;overflow-x:auto;color:${colors.codeForeground};background:${colors.codeBackground};border:1px solid ${colors.codeBorder};border-radius:${radius.md + 2}px;font-family:${typography.mono};font-size:${typography.codeSize}px;font-weight:600;line-height:${typography.codeLineHeight};white-space:pre-wrap;overflow-wrap:anywhere;word-break:normal;tab-size:4;box-shadow:0 9px 24px ${colors.shadow}`,
+    inlineCode: `margin:0 3px;padding:2px 5px;color:${colors.highlightText};background:${colors.highlight};border-radius:${radius.xs}px;font-family:${typography.mono};font-size:0.88em`,
+    img: `display:block;max-width:100%;height:auto;margin:2em auto;border:6px solid ${colors.paper};border-radius:${radius.lg}px;box-shadow:0 12px 30px ${colors.shadow}`,
+    table: `width:100%;margin:0;border:0!important;border-top:0!important;border-collapse:separate;border-spacing:0;table-layout:fixed;outline:0;box-shadow:none!important;background:${colors.highlight};color:${colors.text};font-size:${typography.smallSize}px;line-height:${typography.compactLineHeight}`,
+    thead: `border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:${colors.highlight}`,
+    tbody: `border:0!important;outline:0;box-shadow:none!important;background:${colors.highlight}`,
     tr: "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:transparent",
-    th: `padding:13px 10px;border:0!important;border-top:0!important;border-bottom:1px dashed #e4dac0!important;color:${theme.text};background:transparent;font-weight:800;text-align:left;overflow-wrap:anywhere;box-shadow:none!important`,
-    td: `padding:12px 10px;border:0!important;border-bottom:1px dashed #e8dfc9!important;color:${theme.text};background:transparent;font-weight:500;text-align:left;overflow-wrap:anywhere;box-shadow:none!important`,
+    th: `padding:13px 10px;border:0!important;border-top:0!important;border-bottom:1px dashed ${colors.borderStrong}!important;color:${colors.text};background:transparent;font-weight:800;text-align:left;overflow-wrap:anywhere;box-shadow:none!important`,
+    td: `padding:12px 10px;border:0!important;border-bottom:1px dashed ${colors.border}!important;color:${colors.text};background:transparent;font-weight:500;text-align:left;overflow-wrap:anywhere;box-shadow:none!important`,
   }
 }
 
-function buildJuyaStyles(theme: ArticleTheme) {
-  const family =
-    theme.fontFamily === "sans"
-      ? 'Optima,"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif'
-      : fontStack(theme)
-  const mono =
-    '"Operator Mono",Consolas,Monaco,Menlo,"SFMono-Regular",monospace'
-  const contentMargin = Math.max(10, theme.spacing)
-
+function buildJuyaStyles(
+  _theme: ArticleTheme,
+  tokens: RenderTokens,
+): ArticleStyles {
+  const { colors, radius, spacing, typography } = tokens
+  const contentMargin = Math.max(10, spacing.md)
   return {
-    root: `padding:${theme.spacing + 2}px 0 48px;color:${theme.text};background:${theme.paper};font-family:${family};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};word-break:break-word;overflow-wrap:break-word;text-align:left`,
-    h1: `margin:10px 0 15px;padding:2px 10px;color:${theme.accent};font-family:${family};font-size:${theme.fontSize + 3}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:center`,
-    h2: `margin:30px 8px 15px;padding:7px 15px;color:${theme.text};background:${theme.quote};border:0;border-radius:${Math.max(8, theme.radius - 2)}px;font-family:${family};font-size:${theme.fontSize + 1}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:left;word-break:break-all`,
-    h3: `margin:28px ${contentMargin}px 12px;color:${theme.accent};font-family:${family};font-size:${theme.fontSize + 1}px;line-height:1.5;letter-spacing:0.04em;font-weight:700`,
-    h4: `margin:24px ${contentMargin}px 10px;color:${theme.text};font-family:${family};font-size:${theme.fontSize}px;line-height:1.5;font-weight:700`,
-    p: `margin:0 ${contentMargin}px;padding:5px 0;color:${theme.text};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};letter-spacing:0.06em;text-align:left;text-indent:0`,
-    strong: `color:#1f0c03;font-weight:700`,
+    root: `padding:${spacing.md + 2}px 0 ${spacing.xl}px;color:${colors.text};background:${colors.paper};font-family:${typography.body};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};word-break:break-word;overflow-wrap:break-word;text-align:left`,
+    h1: `margin:10px 0 15px;padding:2px 10px;color:${colors.accent};font-family:${typography.display};font-size:${typography.fontSize + 3}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:center`,
+    h2: `margin:30px 8px 15px;padding:7px 15px;color:${colors.text};background:${colors.surface};border:0;border-radius:${Math.max(8, radius.md - 2)}px;font-family:${typography.display};font-size:${typography.fontSize + 1}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:left;word-break:break-all`,
+    h3: `margin:28px ${contentMargin}px 12px;color:${colors.accent};font-family:${typography.display};font-size:${typography.fontSize + 1}px;line-height:1.5;letter-spacing:0.04em;font-weight:700`,
+    h4: `margin:24px ${contentMargin}px 10px;color:${colors.text};font-family:${typography.display};font-size:${typography.fontSize}px;line-height:1.5;font-weight:700`,
+    p: `margin:0 ${contentMargin}px;padding:5px 0;color:${colors.text};font-size:${typography.fontSize}px;line-height:${typography.lineHeight};letter-spacing:0.06em;text-align:left;text-indent:0`,
+    strong: `color:${colors.text};font-weight:700`,
     em: "font-style:italic",
     del: "opacity:0.55",
-    a: `color:${theme.accent};text-decoration:none;border-bottom:1px solid ${theme.accent}`,
-    blockquote: `margin:20px 10px 10px;padding:9px 12px;color:${theme.text};background:#fdfcfa;border:0.8px solid #dad8d4;border-radius:${theme.radius}px;font-size:${theme.fontSize}px;line-height:${theme.lineHeight};letter-spacing:0.06em;overflow:auto`,
-    ul: `margin:8px 15px;padding:0 0 0 18px;color:${theme.text};list-style-type:disc;list-style-position:outside`,
-    ol: `margin:8px 15px;padding:0 0 0 18px;color:${theme.text};list-style-type:decimal;list-style-position:outside`,
-    li: `margin:5px 0;color:${theme.text};font-size:${Math.max(14, theme.fontSize - 1)}px;line-height:${theme.lineHeight};letter-spacing:0.06em;text-align:left`,
-    hr: `height:0;margin:20px 10px 10px;border:0;border-top:1px dashed #b8b8b8;background:transparent`,
-    pre: `margin:16px 10px;padding:12px;overflow-x:auto;color:#383a42;background:${theme.code};border:0.5px solid #dad8d4;border-radius:${theme.radius}px;font-family:${mono};font-size:${Math.max(12, theme.fontSize - 1)}px;line-height:1.75;white-space:pre-wrap;word-break:break-all`,
-    inlineCode: `margin:0 2px;padding:2px 4px;color:#5c1616;background:#f0efeb;border:0.5px solid #d1cfcc;border-radius:${Math.max(6, theme.radius - 4)}px;font-family:${mono};font-size:0.9em;line-height:1.8;letter-spacing:0;word-break:break-all`,
-    inlineLabelCode: `margin:0 2px;padding:2px 4px;color:${theme.accent};background:#fdfcfa;border:0.5px solid #d1cfcc;border-radius:${Math.max(6, theme.radius - 6)}px;font-family:${mono};font-size:0.9em;line-height:1.8;letter-spacing:0;word-break:break-all`,
-    img: `display:block;max-width:calc(100% - 20px);height:auto;margin:30px auto;border:0;border-radius:${theme.radius}px;object-fit:fill;overflow:hidden`,
-    table: `display:table;width:100%;margin:0;border:0!important;border-collapse:collapse;border-spacing:0;table-layout:fixed;background:#fdfcfa;color:${theme.text};font-size:${Math.max(13, theme.fontSize - 1)}px;line-height:1.5;text-align:left`,
+    a: `color:${colors.accent};text-decoration:none;border-bottom:1px solid ${colors.accent}`,
+    blockquote: `margin:20px 10px 10px;padding:9px 12px;color:${colors.text};background:${colors.surfaceRaised};border:0.8px solid ${colors.border};border-radius:${radius.md}px;font-size:${typography.fontSize}px;line-height:${typography.lineHeight};letter-spacing:0.06em;overflow:auto`,
+    ul: `margin:8px 15px;padding:0 0 0 18px;color:${colors.text};list-style-type:disc;list-style-position:outside`,
+    ol: `margin:8px 15px;padding:0 0 0 18px;color:${colors.text};list-style-type:decimal;list-style-position:outside`,
+    li: `margin:5px 0;color:${colors.text};font-size:${typography.captionSize}px;line-height:${typography.lineHeight};letter-spacing:0.06em;text-align:left`,
+    hr: `height:0;margin:20px 10px 10px;border:0;border-top:1px dashed ${colors.divider};background:transparent`,
+    pre: `margin:16px 10px;padding:12px;overflow-x:auto;color:${colors.codeForeground};background:${colors.codeBackground};border:0.5px solid ${colors.border};border-radius:${radius.md}px;font-family:${typography.mono};font-size:${typography.captionSize}px;line-height:${typography.codeLineHeight};white-space:pre-wrap;word-break:break-all`,
+    inlineCode: `margin:0 2px;padding:2px 4px;color:${colors.highlightText};background:${colors.surface};border:0.5px solid ${colors.border};border-radius:${Math.max(6, radius.md - 4)}px;font-family:${typography.mono};font-size:0.9em;line-height:${typography.codeLineHeight};letter-spacing:0;word-break:break-all`,
+    inlineLabelCode: `margin:0 2px;padding:2px 4px;color:${colors.accent};background:${colors.surfaceRaised};border:0.5px solid ${colors.border};border-radius:${Math.max(6, radius.md - 6)}px;font-family:${typography.mono};font-size:0.9em;line-height:${typography.codeLineHeight};letter-spacing:0;word-break:break-all`,
+    img: `display:block;max-width:calc(100% - 20px);height:auto;margin:30px auto;border:0;border-radius:${radius.md}px;object-fit:fill;overflow:hidden`,
+    table: `display:table;width:100%;margin:0;border:0!important;border-collapse:collapse;border-spacing:0;table-layout:fixed;background:${colors.surfaceRaised};color:${colors.text};font-size:${typography.captionSize}px;line-height:1.5;text-align:left`,
     thead: "border:0!important;background:transparent",
     tbody: "border:0!important;background:transparent",
-    tr: "border:0!important;background:#fdfcfa",
-    th: `min-width:85px;padding:7px 10px;border:0!important;color:${theme.text};background:${theme.quote};font-weight:700;text-align:left;overflow-wrap:break-word;word-break:break-all`,
-    td: `min-width:85px;padding:7px 10px;border:0!important;color:${theme.text};background:transparent;text-align:left;overflow-wrap:break-word;word-break:break-all`,
+    tr: `border:0!important;background:${colors.surfaceRaised}`,
+    th: `min-width:85px;padding:7px 10px;border:0!important;color:${colors.text};background:${colors.surface};font-weight:700;text-align:left;overflow-wrap:break-word;word-break:break-all`,
+    td: `min-width:85px;padding:7px 10px;border:0!important;color:${colors.text};background:transparent;text-align:left;overflow-wrap:break-word;word-break:break-all`,
   }
 }
 
@@ -591,16 +513,221 @@ function preserveCodeWhitespace(node: Node) {
   Array.from(node.childNodes).forEach(preserveCodeWhitespace)
 }
 
+type RendererContext = {
+  doc: Document
+  root: HTMLElement
+  styles: ArticleStyles
+  tokens: RenderTokens
+}
+
+type RendererDefinition = {
+  buildStyles: (theme: ArticleTheme, tokens: RenderTokens) => ArticleStyles
+  decorate: (context: RendererContext) => void
+  inlineCodeStyle?: (node: Element, styles: ArticleStyles) => string
+  prepareCode?: (code: Element, doc: Document) => void
+}
+
+function replaceRulesWithDivider(
+  root: HTMLElement,
+  doc: Document,
+  style: string,
+) {
+  root.querySelectorAll("hr").forEach((rule) => {
+    const divider = doc.createElement("section")
+    divider.textContent = "\u00a0"
+    divider.setAttribute("style", style)
+    divider.setAttribute("aria-hidden", "true")
+    rule.replaceWith(divider)
+  })
+}
+
+function decorateDefaultDocument({ doc, root, tokens }: RendererContext) {
+  replaceRulesWithDivider(
+    root,
+    doc,
+    `height:0;margin:2.4em auto;border:0;border-top:1px solid ${tokens.colors.accent};font-size:0;line-height:0;opacity:0.25;overflow:hidden`,
+  )
+}
+
+function decorateIslandDocument({
+  doc,
+  root,
+  styles,
+  tokens,
+}: RendererContext) {
+  const { colors, radius } = tokens
+
+  root.querySelectorAll("table").forEach((table) => {
+    const wrapper = doc.createElement("section")
+    wrapper.setAttribute(
+      "style",
+      `margin:1.8em 0;padding:5px;overflow:hidden;background:${colors.highlight};border-radius:${radius.md + 2}px;box-sizing:border-box`,
+    )
+    wrapper.setAttribute("data-island-table", "true")
+    table.before(wrapper)
+    wrapper.append(table)
+
+    table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
+      row.setAttribute(
+        "style",
+        rowIndex % 2 === 1
+          ? `border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:${colors.paper}`
+          : styles.tr,
+      )
+    })
+
+    table.querySelectorAll("tbody tr:last-child td").forEach((cell) => {
+      cell.setAttribute("style", `${styles.td};border-bottom:0!important`)
+    })
+  })
+
+  root.querySelectorAll("h2").forEach((heading) => {
+    const leaf = doc.createElement("span")
+    leaf.textContent = "\u00a0"
+    leaf.setAttribute(
+      "style",
+      `display:inline-block;width:0.62em;height:0.43em;margin-right:0.38em;border-radius:100% 0 100% 0;background:${colors.accent};color:transparent;line-height:0;overflow:hidden;transform:rotate(-20deg);vertical-align:0.08em`,
+    )
+    leaf.setAttribute("aria-hidden", "true")
+    heading.prepend(leaf)
+  })
+
+  root.querySelectorAll("blockquote").forEach((quote) => {
+    const mark = doc.createElement("span")
+    mark.textContent = "“"
+    mark.setAttribute(
+      "style",
+      `position:absolute;top:17px;left:19px;color:${colors.accent};font-family:Georgia,serif;font-size:40px;font-weight:700;line-height:1`,
+    )
+    mark.setAttribute("aria-hidden", "true")
+    quote.prepend(mark)
+  })
+
+  root.querySelectorAll("hr").forEach((rule) => {
+    const dots = doc.createElement("section")
+    dots.setAttribute(
+      "style",
+      "margin:2.7em auto;text-align:center;line-height:1",
+    )
+    dots.setAttribute("aria-hidden", "true")
+    for (let index = 0; index < 5; index += 1) {
+      const dot = doc.createElement("span")
+      dot.textContent = "\u00a0"
+      dot.setAttribute(
+        "style",
+        `display:inline-block;width:7px;height:7px;margin:0 8px;background:${colors.secondary};border-radius:50%;font-size:0;line-height:0`,
+      )
+      dots.append(dot)
+    }
+    rule.replaceWith(dots)
+  })
+}
+
+function decorateJuyaDocument({
+  doc,
+  root,
+  styles,
+  tokens,
+}: RendererContext) {
+  const { colors, radius } = tokens
+
+  root.querySelectorAll("table").forEach((table) => {
+    const wrapper = doc.createElement("section")
+    wrapper.setAttribute(
+      "style",
+      `margin:10px 15px;overflow:hidden;background:${colors.surfaceRaised};border:1px solid ${colors.border};border-radius:${radius.md}px`,
+    )
+    wrapper.setAttribute("data-juya-table", "true")
+    table.before(wrapper)
+    wrapper.append(table)
+
+    table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
+      row.setAttribute(
+        "style",
+        rowIndex % 2 === 1
+          ? `border:0!important;background:${colors.tableStripe}`
+          : styles.tr,
+      )
+    })
+  })
+
+  root.querySelectorAll("li").forEach((item) => {
+    const firstNode = item.firstChild
+    if (
+      firstNode?.nodeType !== Node.ELEMENT_NODE ||
+      (firstNode as Element).tagName !== "CODE"
+    ) {
+      return
+    }
+
+    item.setAttribute(
+      "style",
+      `${styles.li};margin-left:-18px;padding-left:0;list-style-type:none`,
+    )
+    const row = doc.createElement("section")
+    row.setAttribute(
+      "style",
+      "display:flex;align-items:baseline;margin:0;padding:0",
+    )
+    const label = doc.createElement("span")
+    label.setAttribute(
+      "style",
+      "display:inline-block;flex:0 0 auto;margin:0;line-height:inherit",
+    )
+    const content = doc.createElement("span")
+    content.setAttribute(
+      "style",
+      "display:block;flex:1 1 auto;margin-left:2px;word-break:break-word;overflow-wrap:break-word;font-size:inherit;line-height:inherit",
+    )
+
+    label.append(firstNode)
+    while (item.firstChild) content.append(item.firstChild)
+    row.append(label, content)
+    item.append(row)
+  })
+
+  replaceRulesWithDivider(
+    root,
+    doc,
+    `height:0;margin:20px 10px 10px;border:0;border-top:1px dashed ${colors.divider};font-size:0;line-height:0;overflow:hidden`,
+  )
+}
+
+const RENDERER_DEFINITIONS: Record<ThemeRendererId, RendererDefinition> = {
+  default: {
+    buildStyles: buildDefaultStyles,
+    decorate: decorateDefaultDocument,
+  },
+  "island-log": {
+    buildStyles: buildIslandStyles,
+    decorate: decorateIslandDocument,
+    prepareCode: highlightIslandCode,
+  },
+  "juya-daily": {
+    buildStyles: buildJuyaStyles,
+    decorate: decorateJuyaDocument,
+    inlineCodeStyle: (node, styles) =>
+      node.closest("h1,h2,h3,h4,li") && styles.inlineLabelCode
+        ? styles.inlineLabelCode
+        : styles.inlineCode,
+  },
+}
+
+export function getArticleStyles(theme: ArticleTheme) {
+  const tokens = resolveThemeTokens(theme)
+  return RENDERER_DEFINITIONS[getThemeRendererId(theme)].buildStyles(
+    theme,
+    tokens,
+  )
+}
+
 export function inlineDocument(html: string, theme: ArticleTheme) {
   const parser = new DOMParser()
   const doc = parser.parseFromString(`<section>${html}</section>`, "text/html")
   const root = doc.querySelector("section")!
-  const styles =
-    theme.renderer === "island-log"
-      ? buildIslandStyles(theme)
-      : theme.renderer === "juya-daily"
-        ? buildJuyaStyles(theme)
-      : buildStyles(theme)
+  const tokens = resolveThemeTokens(theme)
+  const renderer = RENDERER_DEFINITIONS[getThemeRendererId(theme)]
+  const styles = renderer.buildStyles(theme, tokens)
   root.setAttribute("style", styles.root)
 
   const selectors: Record<string, string> = {
@@ -626,180 +753,32 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
     th: styles.th,
     td: styles.td,
   }
-  if ("hr" in styles && typeof styles.hr === "string") {
-    selectors.hr = styles.hr
-  }
+  if (styles.hr) selectors.hr = styles.hr
 
   Object.entries(selectors).forEach(([selector, style]) => {
-    root.querySelectorAll(selector).forEach((node) => node.setAttribute("style", style))
+    root
+      .querySelectorAll(selector)
+      .forEach((node) => node.setAttribute("style", style))
   })
   root.querySelectorAll('code[data-inline="true"]').forEach((node) => {
-    const useLabelStyle =
-      theme.renderer === "juya-daily" &&
-      Boolean(node.closest("h1,h2,h3,h4,li"))
     node.setAttribute(
       "style",
-      useLabelStyle &&
-        "inlineLabelCode" in styles &&
-        typeof styles.inlineLabelCode === "string"
-        ? styles.inlineLabelCode
-        : styles.inlineCode,
+      renderer.inlineCodeStyle?.(node, styles) || styles.inlineCode,
     )
     node.removeAttribute("data-inline")
   })
   root.querySelectorAll("pre").forEach((node) => {
     const code = node.querySelector("code")
-    if (theme.renderer === "island-log") {
-      if (code) highlightIslandCode(code, doc)
+    if (code) {
+      renderer.prepareCode?.(code, doc)
+      preserveCodeWhitespace(code)
     }
-    if (code) preserveCodeWhitespace(code)
     node.removeAttribute("data-language")
   })
-  root.querySelectorAll("a").forEach((node) => node.setAttribute("target", "_blank"))
+  root.querySelectorAll("a").forEach((node) => {
+    node.setAttribute("target", "_blank")
+  })
 
-  if (theme.renderer === "island-log") {
-    root.querySelectorAll("table").forEach((table) => {
-      const wrapper = doc.createElement("section")
-      wrapper.setAttribute(
-        "style",
-        "margin:1.8em 0;padding:5px;overflow:hidden;background:#f7f3df;border-radius:20px;box-sizing:border-box",
-      )
-      wrapper.setAttribute("data-island-table", "true")
-      table.before(wrapper)
-      wrapper.append(table)
-
-      table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
-        row.setAttribute(
-          "style",
-          rowIndex % 2 === 1
-            ? "border:0!important;border-top:0!important;outline:0;box-shadow:none!important;background:#fffaf0"
-            : styles.tr,
-        )
-      })
-
-      table.querySelectorAll("tbody tr:last-child td").forEach((cell) => {
-        cell.setAttribute(
-          "style",
-          `${styles.td};border-bottom:0!important`,
-        )
-      })
-    })
-
-    root.querySelectorAll("h2").forEach((heading) => {
-      const leaf = doc.createElement("span")
-      leaf.textContent = "\u00a0"
-      leaf.setAttribute(
-        "style",
-        `display:inline-block;width:0.62em;height:0.43em;margin-right:0.38em;border-radius:100% 0 100% 0;background:${theme.accent};color:transparent;line-height:0;overflow:hidden;transform:rotate(-20deg);vertical-align:0.08em`,
-      )
-      leaf.setAttribute("aria-hidden", "true")
-      heading.prepend(leaf)
-    })
-
-    root.querySelectorAll("blockquote").forEach((quote) => {
-      const mark = doc.createElement("span")
-      mark.textContent = "“"
-      mark.setAttribute(
-        "style",
-        `position:absolute;top:17px;left:19px;color:${theme.accent};font-family:Georgia,serif;font-size:40px;font-weight:700;line-height:1`,
-      )
-      mark.setAttribute("aria-hidden", "true")
-      quote.prepend(mark)
-    })
-
-    root.querySelectorAll("hr").forEach((rule) => {
-      const dots = doc.createElement("section")
-      dots.setAttribute(
-        "style",
-        "margin:2.7em auto;text-align:center;line-height:1",
-      )
-      dots.setAttribute("aria-hidden", "true")
-      dots.innerHTML = [0, 1, 2, 3, 4]
-        .map(
-          () =>
-            `<span style="display:inline-block;width:7px;height:7px;margin:0 8px;background:${theme.secondary || "#f7cd67"};border-radius:50%;font-size:0;line-height:0">&nbsp;</span>`,
-        )
-        .join("")
-      rule.replaceWith(dots)
-    })
-  } else if (theme.renderer === "juya-daily") {
-    root.querySelectorAll("table").forEach((table) => {
-      const wrapper = doc.createElement("section")
-      wrapper.setAttribute(
-        "style",
-        `margin:10px 15px;overflow:hidden;background:#fdfcfa;border:1px solid #d1cfcc;border-radius:${theme.radius}px`,
-      )
-      wrapper.setAttribute("data-juya-table", "true")
-      table.before(wrapper)
-      wrapper.append(table)
-
-      table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
-        row.setAttribute(
-          "style",
-          rowIndex % 2 === 1
-            ? "border:0!important;background:#f8f7f2"
-            : styles.tr,
-        )
-      })
-    })
-
-    root.querySelectorAll("li").forEach((item) => {
-      const firstNode = item.firstChild
-      if (
-        firstNode?.nodeType !== Node.ELEMENT_NODE ||
-        (firstNode as Element).tagName !== "CODE"
-      ) {
-        return
-      }
-
-      item.setAttribute(
-        "style",
-        `${styles.li};margin-left:-18px;padding-left:0;list-style-type:none`,
-      )
-      const row = doc.createElement("section")
-      row.setAttribute(
-        "style",
-        "display:flex;align-items:baseline;margin:0;padding:0",
-      )
-      const label = doc.createElement("span")
-      label.setAttribute(
-        "style",
-        "display:inline-block;flex:0 0 auto;margin:0;line-height:inherit",
-      )
-      const content = doc.createElement("span")
-      content.setAttribute(
-        "style",
-        "display:block;flex:1 1 auto;margin-left:2px;word-break:break-word;overflow-wrap:break-word;font-size:inherit;line-height:inherit",
-      )
-
-      label.append(firstNode)
-      while (item.firstChild) content.append(item.firstChild)
-      row.append(label, content)
-      item.append(row)
-    })
-
-    root.querySelectorAll("hr").forEach((rule) => {
-      const divider = doc.createElement("section")
-      divider.textContent = "\u00a0"
-      divider.setAttribute(
-        "style",
-        "height:0;margin:20px 10px 10px;border:0;border-top:1px dashed #b8b8b8;font-size:0;line-height:0;overflow:hidden",
-      )
-      divider.setAttribute("aria-hidden", "true")
-      rule.replaceWith(divider)
-    })
-  } else {
-    root.querySelectorAll("hr").forEach((rule) => {
-      const divider = doc.createElement("section")
-      divider.textContent = "\u00a0"
-      divider.setAttribute(
-        "style",
-        `height:0;margin:2.4em auto;border:0;border-top:1px solid ${theme.accent};font-size:0;line-height:0;opacity:0.25;overflow:hidden`,
-      )
-      divider.setAttribute("aria-hidden", "true")
-      rule.replaceWith(divider)
-    })
-  }
-
+  renderer.decorate({ doc, root, styles, tokens })
   return root.outerHTML
 }
