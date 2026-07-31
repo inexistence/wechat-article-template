@@ -868,12 +868,14 @@ export default function App() {
               <Button
                 variant="ghost"
                 size="icon"
+                className="new-document-action"
                 hoverScale={1.02}
                 tapScale={0.96}
                 aria-label="新建文章"
                 onClick={() => setCreateDialogOpen(true)}
               >
                 <FilePlus2 />
+                <span>新建</span>
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom">新建文章</TooltipContent>
