@@ -460,12 +460,11 @@ function buildJuyaStyles(theme: ArticleTheme) {
   const mono =
     '"Operator Mono",Consolas,Monaco,Menlo,"SFMono-Regular",monospace'
   const contentMargin = Math.max(10, theme.spacing)
-  const secondary = theme.secondary || "#a0f9b0"
 
   return {
     root: `padding:${theme.spacing + 2}px 0 48px;color:${theme.text};background:${theme.paper};font-family:${family};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};word-break:break-word;overflow-wrap:break-word;text-align:left`,
     h1: `margin:10px 0 15px;padding:2px 10px;color:${theme.accent};font-family:${family};font-size:${theme.fontSize + 3}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:center`,
-    h2: `margin:30px 10px 15px;padding:12px 18px;color:${theme.text};background:${theme.quote};border:0;border-bottom:4px solid ${secondary};border-radius:${theme.radius}px;font-family:${family};font-size:${theme.fontSize + 1}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:left;word-break:break-all`,
+    h2: `margin:30px 8px 15px;padding:7px 15px;color:${theme.text};background:${theme.quote};border:0;border-radius:${Math.max(8, theme.radius - 2)}px;font-family:${family};font-size:${theme.fontSize + 1}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:left;word-break:break-all`,
     h3: `margin:28px ${contentMargin}px 12px;color:${theme.accent};font-family:${family};font-size:${theme.fontSize + 1}px;line-height:1.5;letter-spacing:0.04em;font-weight:700`,
     h4: `margin:24px ${contentMargin}px 10px;color:${theme.text};font-family:${family};font-size:${theme.fontSize}px;line-height:1.5;font-weight:700`,
     p: `margin:0 ${contentMargin}px;padding:5px 0;color:${theme.text};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};letter-spacing:0.06em;text-align:left;text-indent:0`,

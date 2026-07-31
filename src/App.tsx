@@ -60,7 +60,7 @@ import {
 
 const DOCUMENT_KEY = "paibanjian-react-document-v3"
 const CUSTOM_THEMES_KEY = "paibanjian-react-themes-v3"
-const THEME_VERSION = 8
+const THEME_VERSION = 9
 
 type WorkspaceView = "write" | "preview" | "style"
 type PreviewMode = "visual" | "html"
@@ -1067,7 +1067,7 @@ export default function App() {
                 <p className="structure-note">
                   {activeTheme.renderer === "island-log"
                     ? "叶片标题、手写引用和点状分隔是这套模板的固定结构。颜色、字体、字号和阅读参数仍可调整。"
-                    : "米色圆角标题、绿色底线、标签式编号和虚线分隔是这套日报模板的固定结构。颜色、字体、字号和阅读参数仍可调整。"}
+                    : "米色圆角标题、标签式编号和虚线分隔是这套日报模板的固定结构。颜色、字体、字号和阅读参数仍可调整。"}
                 </p>
               </section>
             ) : (

@@ -444,11 +444,10 @@ textarea {
 }
 
 .theme-thumbnail--juya em {
-  height: 12px;
+  height: 9px;
   top: 20px;
   opacity: 1;
   background: #f0eee6;
-  border-bottom: 3px solid #a0f9b0;
   border-radius: 4px;
   box-shadow: none;
 }
