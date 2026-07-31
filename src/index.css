@@ -398,6 +398,34 @@ textarea {
   border-radius: 2px;
 }
 
+.theme-thumbnail i {
+  width: 4px;
+  height: 9px;
+  top: 8px;
+  right: auto;
+  background: var(--thumb-accent);
+}
+
+.theme-thumbnail b {
+  height: 2px;
+  top: 9px;
+  left: 13px;
+}
+
+.theme-thumbnail em {
+  height: 1px;
+  top: 24px;
+  opacity: 0.45;
+  box-shadow: 0 5px 0 var(--thumb-text), 0 10px 0 var(--thumb-text);
+}
+
+.theme-thumbnail small {
+  width: 18px;
+  height: 1px;
+  top: 39px;
+  opacity: 0.45;
+}
+
 .theme-thumbnail--island i {
   width: 8px;
   height: 6px;
@@ -459,34 +487,6 @@ textarea {
   opacity: 0.42;
   background: var(--thumb-text);
   box-shadow: 0 4px 0 var(--thumb-text);
-}
-
-.theme-thumbnail i {
-  width: 4px;
-  height: 9px;
-  top: 8px;
-  right: auto;
-  background: var(--thumb-accent);
-}
-
-.theme-thumbnail b {
-  height: 2px;
-  top: 9px;
-  left: 13px;
-}
-
-.theme-thumbnail em {
-  height: 1px;
-  top: 24px;
-  opacity: 0.45;
-  box-shadow: 0 5px 0 var(--thumb-text), 0 10px 0 var(--thumb-text);
-}
-
-.theme-thumbnail small {
-  width: 18px;
-  height: 1px;
-  top: 39px;
-  opacity: 0.45;
 }
 
 .theme-copy strong,
