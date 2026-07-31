@@ -1,0 +1,22 @@
+scripts/verify-theme-contract.mjs
+  s_3766e8ff8f63b0::t_41b318b80c84cf 288,448
+src/lib/theme.ts
+  s_3766e8ff8f63b0::t_ba9be52c273fa2 31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "1865ae36654bcc6d8c3da0222d832d782b72d3c8",
+  "prompts": {},
+  "logical_commit_id": "1865ae36654bcc6d8c3da0222d832d782b72d3c8",
+  "sessions": {
+    "s_3766e8ff8f63b0": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb7dd-e421-7661-b24f-8664af4fbbc6",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
