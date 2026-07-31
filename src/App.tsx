@@ -626,7 +626,14 @@ export default function App() {
 
       <header className="app-header">
         <a className="wordmark" href="#" aria-label="排版间首页">
-          <span aria-hidden="true" />
+          <img
+            src="/brand/logo-mark-192.png"
+            alt=""
+            width="28"
+            height="28"
+            aria-hidden="true"
+            draggable={false}
+          />
           <strong>排版间</strong>
         </a>
 

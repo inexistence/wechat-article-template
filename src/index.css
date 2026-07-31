@@ -129,35 +129,24 @@ textarea {
   display: inline-flex;
   width: fit-content;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   color: inherit;
   text-decoration: none;
 }
 
-.wordmark > span {
-  width: 10px;
-  height: 10px;
+.wordmark > img {
+  width: 25px;
+  height: 25px;
   display: block;
-  position: relative;
-  background: oklch(0.24 0 0);
-  border-radius: 50%;
-}
-
-.wordmark > span::after {
-  content: "";
-  width: 4px;
-  height: 4px;
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  background: var(--background);
-  border-radius: inherit;
+  flex: 0 0 auto;
+  object-fit: contain;
+  user-select: none;
 }
 
 .wordmark strong {
   font-size: 15px;
   font-weight: 650;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.08em;
 }
 
 .document-status {
