@@ -34,3 +34,7 @@ npm run preview
 - 一键复制带内联 CSS 的富文本
 - HTML 查看与 Markdown 下载
 - 桌面端和手机端响应式工作区
+
+## 开源协议
+
+本项目基于 [MIT License](LICENSE) 开源。
