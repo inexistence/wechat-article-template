@@ -2,6 +2,7 @@ import {
   Bold,
   Braces,
   Check,
+  ChevronDown,
   ChevronRight,
   Code2,
   Download,
@@ -86,6 +87,7 @@ type WorkspaceView = "write" | "preview" | "style"
 type PreviewMode = "visual" | "html"
 type PreviewWidth = 320 | 375 | 420
 type SaveState = "saved" | "saving" | "error"
+type SettingsView = "theme" | "article"
 
 const PREVIEW_WIDTHS: { value: PreviewWidth; label: string }[] = [
   { value: 320, label: "紧凑" },
@@ -351,7 +353,7 @@ function SettingSlider({
   )
 }
 
-function SettingChoice<T extends string>({
+function SettingSegmented<T extends string>({
   label,
   value,
   options,
@@ -363,24 +365,100 @@ function SettingChoice<T extends string>({
   onChange: (value: T) => void
 }) {
   return (
-    <div className="setting-choice">
-      <b>{label}</b>
-      <div className={cn("choice-grid", options.length === 2 && "two")}>
+    <div className="setting-control">
+      <b className="setting-label">{label}</b>
+      <div className="setting-segmented" role="group" aria-label={label}>
         {options.map((option) => (
-          <Button
+          <button
             key={option.value}
             type="button"
-            variant={value === option.value ? "secondary" : "outline"}
+            className={cn(
+              "setting-segment",
+              value === option.value && "is-selected",
+            )}
             aria-pressed={value === option.value}
-            hoverScale={1.015}
-            tapScale={0.98}
             onClick={() => onChange(option.value)}
           >
             {option.label}
-          </Button>
+          </button>
         ))}
       </div>
     </div>
+  )
+}
+
+function SettingSwitch({
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  label: string
+  description?: string
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}) {
+  return (
+    <div className="setting-switch-row">
+      <span className="setting-switch-copy">
+        <b>{label}</b>
+        {description && <small>{description}</small>}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-label={label}
+        aria-checked={checked}
+        className={cn("setting-switch", checked && "is-checked")}
+        onClick={() => onCheckedChange(!checked)}
+      >
+        <span />
+      </button>
+    </div>
+  )
+}
+
+function SettingRadioList<T extends string>({
+  label,
+  name,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  name: string
+  value: T
+  options: readonly { value: T; label: string; description: string }[]
+  onChange: (value: T) => void
+}) {
+  return (
+    <fieldset className="setting-radio-group">
+      <legend className="setting-label">{label}</legend>
+      <div className="setting-radio-list">
+        {options.map((option) => (
+          <label
+            key={option.value}
+            className={cn(
+              "setting-radio-option",
+              value === option.value && "is-selected",
+            )}
+          >
+            <input
+              type="radio"
+              name={name}
+              value={option.value}
+              checked={value === option.value}
+              onChange={() => onChange(option.value)}
+            />
+            <span className="setting-radio-indicator" aria-hidden="true" />
+            <span>
+              <b>{option.label}</b>
+              <small>{option.description}</small>
+            </span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
   )
 }
 
@@ -408,6 +486,8 @@ export default function App() {
   const [previewMode, setPreviewMode] = useState<PreviewMode>("visual")
   const [previewWidth, setPreviewWidth] = useState<PreviewWidth>(375)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [settingsView, setSettingsView] = useState<SettingsView>("theme")
+  const [settingsPreviewOpen, setSettingsPreviewOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [renamingThemeId, setRenamingThemeId] = useState<string | null>(null)
   const [renameValue, setRenameValue] = useState("")
@@ -431,6 +511,10 @@ export default function App() {
   )
   const isControlEditable = (control: ThemeControl) =>
     canEditThemeControl(themeContract, control)
+  const storedTheme = allThemes[selectedThemeId]
+  const themeIsModified = Boolean(
+    storedTheme && JSON.stringify(storedTheme) !== JSON.stringify(activeTheme),
+  )
 
   const finalHtml = useMemo(
     () => inlineDocument(markdownToHtml(markdown), activeTheme, layoutSettings),
@@ -490,6 +574,12 @@ export default function App() {
     value: ArticleTheme[K],
   ) => {
     setActiveTheme((theme) => ({ ...theme, [key]: value }))
+  }
+
+  const openSettings = (view: SettingsView = "theme") => {
+    setSettingsView(view)
+    setSettingsPreviewOpen(false)
+    setSettingsOpen(true)
   }
 
   const selectTheme = (id: string) => {
@@ -620,8 +710,7 @@ export default function App() {
     setCustomThemes(list)
     setSelectedThemeId(id)
     setActiveTheme(next)
-    setSettingsOpen(false)
-    toast.success("模板已保存")
+    toast.success(`已另存为“${next.name}”`)
   }
 
   const startRenamingTheme = (theme: ArticleTheme) => {
@@ -674,9 +763,12 @@ export default function App() {
     toast.success("模板已删除")
   }
 
-  const resetSettings = () => {
+  const resetThemeSettings = () => {
     const original = allThemes[selectedThemeId] || BUILTIN_THEMES.clean
     setActiveTheme(structuredClone(original))
+  }
+
+  const resetArticleLayout = () => {
     setLayoutSettings(structuredClone(DEFAULT_ARTICLE_LAYOUT_SETTINGS))
   }
 
@@ -822,8 +914,8 @@ export default function App() {
                 size="icon-sm"
                 hoverScale={1.02}
                 tapScale={0.96}
-                onClick={() => setSettingsOpen(true)}
-                aria-label="调整模板"
+                onClick={() => openSettings("theme")}
+                aria-label="打开排版设置"
               >
                 <Settings2 />
               </Button>
@@ -957,13 +1049,13 @@ export default function App() {
           <button
             type="button"
             className="adjust-row"
-            onClick={() => setSettingsOpen(true)}
+            onClick={() => openSettings("theme")}
           >
             <span>
               <Settings2 />
               <span>
-                <strong>调整当前模板</strong>
-                <small>颜色、文字与间距</small>
+                <strong>排版设置</strong>
+                <small>模板外观与文章版式</small>
               </span>
             </span>
             <ChevronRight />
@@ -1151,364 +1243,441 @@ export default function App() {
         </section>
       </main>
 
-      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+      <Sheet open={settingsOpen} onOpenChange={setSettingsOpen} modal={false}>
         <SheetContent
-          side="right"
-          className="template-sheet sm:w-[420px]"
-          transition={{ type: "spring", stiffness: 240, damping: 30 }}
+          side="left"
+          showOverlay={false}
+          className="template-sheet"
+          transition={{ type: "spring", stiffness: 260, damping: 32 }}
         >
           <SheetHeader className="sheet-heading">
-            <SheetTitle>排版设置</SheetTitle>
+            <div className="sheet-title-row">
+              <SheetTitle>排版设置</SheetTitle>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="settings-preview-toggle"
+                onClick={() => setSettingsPreviewOpen((open) => !open)}
+              >
+                {settingsPreviewOpen ? "返回设置" : "查看预览"}
+              </Button>
+            </div>
             <SheetDescription>
-              模板外观与文章版式会实时反映在预览中。
+              {settingsPreviewOpen
+                ? "当前文章在公众号中的实际排版效果。"
+                : "修改会自动保存，并即时反映在预览中。"}
             </SheetDescription>
           </SheetHeader>
 
-          <div className="settings-scroll">
-            {editableColorControls.length > 0 && (
-              <section className="setting-section">
-                <h3>颜色</h3>
-                <div className="color-settings">
-                  {editableColorControls.map((key) => (
-                    <label key={key}>
-                      <span>{THEME_CONTROL_LABELS[key]}</span>
-                      <input
-                        type="color"
-                        value={activeTheme[key]}
-                        onChange={(event) =>
-                          updateTheme(key, event.target.value)
+          {settingsPreviewOpen ? (
+            <div className="settings-mobile-preview">
+              <div className="preview-width">
+                <i />
+                <span>{previewWidth}</span>
+                <i />
+              </div>
+              <article
+                className="article-preview"
+                dangerouslySetInnerHTML={{ __html: finalHtml }}
+              />
+            </div>
+          ) : (
+            <>
+              <Tabs
+                value={settingsView}
+                onValueChange={(value) =>
+                  setSettingsView(value as SettingsView)
+                }
+                className="settings-tabs"
+              >
+                <TabsList className="settings-tabs-list">
+                  <TabsTrigger value="theme">模板外观</TabsTrigger>
+                  <TabsTrigger value="article">文章版式</TabsTrigger>
+                </TabsList>
+
+                <TabsContents mode="layout" className="settings-tab-contents">
+                  <TabsContent value="theme" className="settings-scroll">
+                    <div className="setting-scope-note">
+                      <div>
+                        <span className="setting-scope-badge">随模板</span>
+                        <strong>{activeTheme.name}</strong>
+                        {themeIsModified && <em>已调整</em>}
+                      </div>
+                      <p>切换模板时，这些外观设置会随模板一起改变。</p>
+                    </div>
+
+                    {editableColorControls.length > 0 && (
+                      <section className="setting-section">
+                        <h3>颜色</h3>
+                        <div className="color-settings">
+                          {editableColorControls.map((key) => (
+                            <label key={key}>
+                              <span>{THEME_CONTROL_LABELS[key]}</span>
+                              <input
+                                type="color"
+                                aria-label={THEME_CONTROL_LABELS[key]}
+                                value={activeTheme[key]}
+                                onChange={(event) =>
+                                  updateTheme(key, event.target.value)
+                                }
+                              />
+                            </label>
+                          ))}
+                        </div>
+                      </section>
+                    )}
+
+                    <section className="setting-section">
+                      <h3>文字与阅读</h3>
+                      {isControlEditable("fontFamily") && (
+                        <SettingSegmented
+                          label="正文字体"
+                          value={activeTheme.fontFamily}
+                          options={[
+                            { value: "sans", label: "现代" },
+                            { value: "serif", label: "人文" },
+                            { value: "rounded", label: "圆润" },
+                          ] satisfies { value: FontFamily; label: string }[]}
+                          onChange={(value) => updateTheme("fontFamily", value)}
+                        />
+                      )}
+                      {isControlEditable("fontSize") && (
+                        <SettingSlider
+                          label={THEME_CONTROL_LABELS.fontSize}
+                          value={activeTheme.fontSize}
+                          display={`${activeTheme.fontSize}px`}
+                          min={14}
+                          max={19}
+                          onChange={(value) => updateTheme("fontSize", value)}
+                        />
+                      )}
+                      {isControlEditable("lineHeight") && (
+                        <SettingSlider
+                          label={THEME_CONTROL_LABELS.lineHeight}
+                          value={activeTheme.lineHeight}
+                          display={activeTheme.lineHeight.toFixed(1)}
+                          min={1.5}
+                          max={2.3}
+                          step={0.1}
+                          onChange={(value) => updateTheme("lineHeight", value)}
+                        />
+                      )}
+                    </section>
+
+                    <section className="setting-section">
+                      <h3>标题与留白</h3>
+                      {isControlEditable("headingStyle") && (
+                        <SettingSegmented
+                          label="标题造型"
+                          value={activeTheme.headingStyle}
+                          options={[
+                            { value: "bar", label: "竖线" },
+                            { value: "underline", label: "下划线" },
+                            { value: "label", label: "标签" },
+                          ] satisfies { value: HeadingStyle; label: string }[]}
+                          onChange={(value) => updateTheme("headingStyle", value)}
+                        />
+                      )}
+                      {isControlEditable("spacing") && (
+                        <SettingSlider
+                          label="正文内边距"
+                          value={activeTheme.spacing}
+                          display={`${activeTheme.spacing}px`}
+                          min={14}
+                          max={36}
+                          step={2}
+                          onChange={(value) => updateTheme("spacing", value)}
+                        />
+                      )}
+                      {isControlEditable("radius") && (
+                        <SettingSlider
+                          label="图片与内容圆角"
+                          value={activeTheme.radius}
+                          display={`${activeTheme.radius}px`}
+                          min={0}
+                          max={20}
+                          step={2}
+                          onChange={(value) => updateTheme("radius", value)}
+                        />
+                      )}
+                    </section>
+
+                    {themeContract.structureNote && (
+                      <section className="setting-section setting-structure">
+                        <h3>模板结构</h3>
+                        <p className="structure-note">
+                          {themeContract.structureNote}
+                        </p>
+                      </section>
+                    )}
+                  </TabsContent>
+
+                  <TabsContent value="article" className="settings-scroll">
+                    <div className="setting-scope-note">
+                      <div>
+                        <span className="setting-scope-badge is-article">
+                          文章级
+                        </span>
+                        <strong>当前文章</strong>
+                      </div>
+                      <p>切换模板后保持不变，只影响当前文章的内容布局。</p>
+                    </div>
+
+                    <section className="setting-section">
+                      <h3>正文</h3>
+                      <SettingSegmented
+                        label="正文对齐"
+                        value={layoutSettings.paragraphAlign}
+                        options={[
+                          { value: "left", label: "左对齐" },
+                          { value: "justify", label: "两端对齐" },
+                        ]}
+                        onChange={(paragraphAlign) =>
+                          setLayoutSettings((settings) => ({
+                            ...settings,
+                            paragraphAlign,
+                          }))
                         }
                       />
-                    </label>
-                  ))}
-                </div>
-              </section>
-            )}
+                      <SettingSwitch
+                        label="首行缩进"
+                        description="每段正文缩进 2 个汉字"
+                        checked={layoutSettings.firstLineIndent}
+                        onCheckedChange={(firstLineIndent) =>
+                          setLayoutSettings((settings) => ({
+                            ...settings,
+                            firstLineIndent,
+                          }))
+                        }
+                      />
+                      <SettingSegmented
+                        label="段落间距"
+                        value={layoutSettings.paragraphSpacing}
+                        options={[
+                          { value: "compact", label: "紧凑" },
+                          { value: "standard", label: "标准" },
+                          { value: "relaxed", label: "宽松" },
+                        ]}
+                        onChange={(paragraphSpacing) =>
+                          setLayoutSettings((settings) => ({
+                            ...settings,
+                            paragraphSpacing,
+                          }))
+                        }
+                      />
+                    </section>
 
-            <section className="setting-section">
-              <h3>阅读参数</h3>
-              {isControlEditable("fontSize") && (
-                <SettingSlider
-                  label={THEME_CONTROL_LABELS.fontSize}
-                  value={activeTheme.fontSize}
-                  display={`${activeTheme.fontSize}px`}
-                  min={14}
-                  max={19}
-                  onChange={(value) => updateTheme("fontSize", value)}
-                />
-              )}
-              {isControlEditable("lineHeight") && (
-                <SettingSlider
-                  label={THEME_CONTROL_LABELS.lineHeight}
-                  value={activeTheme.lineHeight}
-                  display={activeTheme.lineHeight.toFixed(1)}
-                  min={1.5}
-                  max={2.3}
-                  step={0.1}
-                  onChange={(value) => updateTheme("lineHeight", value)}
-                />
-              )}
-              {isControlEditable("spacing") && (
-                <SettingSlider
-                  label={THEME_CONTROL_LABELS.spacing}
-                  value={activeTheme.spacing}
-                  display={`${activeTheme.spacing}px`}
-                  min={14}
-                  max={36}
-                  step={2}
-                  onChange={(value) => updateTheme("spacing", value)}
-                />
-              )}
-              {isControlEditable("radius") && (
-                <SettingSlider
-                  label={THEME_CONTROL_LABELS.radius}
-                  value={activeTheme.radius}
-                  display={`${activeTheme.radius}px`}
-                  min={0}
-                  max={20}
-                  step={2}
-                  onChange={(value) => updateTheme("radius", value)}
-                />
-              )}
-            </section>
+                    <section className="setting-section">
+                      <h3>图片</h3>
+                      <SettingRadioList
+                        label="图片布局"
+                        name="image-layout"
+                        value={layoutSettings.imageLayout}
+                        options={[
+                          {
+                            value: "stack",
+                            label: "普通排列",
+                            description: "图片依次纵向展示",
+                          },
+                          {
+                            value: "scroll",
+                            label: "横向滑动",
+                            description: "连续图片组成滑动图组",
+                          },
+                        ]}
+                        onChange={(imageLayout) =>
+                          setLayoutSettings((settings) => ({
+                            ...settings,
+                            imageLayout,
+                          }))
+                        }
+                      />
+                      <AnimatePresence initial={false} mode="wait">
+                        {layoutSettings.imageLayout === "stack" && (
+                          <motion.div
+                            key="image-width"
+                            className="setting-dependent"
+                            initial={{ opacity: 0, y: -3 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -3 }}
+                            transition={{
+                              duration: 0.18,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                          >
+                            <SettingSegmented
+                              label="图片宽度"
+                              value={layoutSettings.imageWidth}
+                              options={[
+                                { value: "natural", label: "适应原图" },
+                                { value: "full", label: "撑满正文" },
+                              ]}
+                              onChange={(imageWidth) =>
+                                setLayoutSettings((settings) => ({
+                                  ...settings,
+                                  imageWidth,
+                                }))
+                              }
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                      <div className="setting-dependent">
+                        <SettingSwitch
+                          label="显示图片说明"
+                          description="优先使用图片 title，其次使用 alt"
+                          checked={layoutSettings.showImageCaptions}
+                          onCheckedChange={(showImageCaptions) =>
+                            setLayoutSettings((settings) => ({
+                              ...settings,
+                              showImageCaptions,
+                            }))
+                          }
+                        />
+                      </div>
+                      <AnimatePresence initial={false}>
+                        {layoutSettings.showImageCaptions && (
+                          <motion.div
+                            key="image-caption-settings"
+                            className="setting-dependent setting-nested"
+                            initial={{ opacity: 0, y: -3 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -3 }}
+                            transition={{
+                              duration: 0.18,
+                              ease: [0.22, 1, 0.36, 1],
+                            }}
+                          >
+                            <SettingSlider
+                              label="图注字号"
+                              value={layoutSettings.imageCaptionSize}
+                              display={`${layoutSettings.imageCaptionSize}px`}
+                              min={10}
+                              max={16}
+                              onChange={(imageCaptionSize) =>
+                                setLayoutSettings((settings) => ({
+                                  ...settings,
+                                  imageCaptionSize,
+                                }))
+                              }
+                            />
+                            <SettingSegmented
+                              label="图注对齐"
+                              value={layoutSettings.imageCaptionAlign}
+                              options={[
+                                { value: "left", label: "左对齐" },
+                                { value: "center", label: "居中" },
+                              ]}
+                              onChange={(imageCaptionAlign) =>
+                                setLayoutSettings((settings) => ({
+                                  ...settings,
+                                  imageCaptionAlign,
+                                }))
+                              }
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </section>
 
-            <section className="setting-section">
-              <h3>正文版式</h3>
-              <SettingChoice
-                label="正文对齐"
-                value={layoutSettings.paragraphAlign}
-                options={[
-                  { value: "left", label: "左对齐" },
-                  { value: "justify", label: "两端对齐" },
-                ]}
-                onChange={(paragraphAlign) =>
-                  setLayoutSettings((settings) => ({
-                    ...settings,
-                    paragraphAlign,
-                  }))
-                }
-              />
-              <SettingChoice
-                label="首行缩进"
-                value={layoutSettings.firstLineIndent ? "indent" : "none"}
-                options={[
-                  { value: "none", label: "不缩进" },
-                  { value: "indent", label: "缩进 2 字" },
-                ]}
-                onChange={(value) =>
-                  setLayoutSettings((settings) => ({
-                    ...settings,
-                    firstLineIndent: value === "indent",
-                  }))
-                }
-              />
-              <SettingChoice
-                label="段落间距"
-                value={layoutSettings.paragraphSpacing}
-                options={[
-                  { value: "compact", label: "紧凑" },
-                  { value: "standard", label: "标准" },
-                  { value: "relaxed", label: "宽松" },
-                ]}
-                onChange={(paragraphSpacing) =>
-                  setLayoutSettings((settings) => ({
-                    ...settings,
-                    paragraphSpacing,
-                  }))
-                }
-              />
-            </section>
+                    <details className="settings-advanced">
+                      <summary>
+                        <span>
+                          <strong>高级内容适配</strong>
+                          <small>代码块和宽表格的溢出方式</small>
+                        </span>
+                        <ChevronDown />
+                      </summary>
+                      <div className="settings-advanced-content">
+                        <SettingRadioList
+                          label="代码块长行"
+                          name="code-overflow"
+                          value={layoutSettings.codeOverflow}
+                          options={[
+                            {
+                              value: "wrap",
+                              label: "自动换行",
+                              description: "适合手机阅读，不需要左右拖动",
+                            },
+                            {
+                              value: "scroll",
+                              label: "横向滚动",
+                              description: "保持代码原始行结构",
+                            },
+                          ]}
+                          onChange={(codeOverflow) =>
+                            setLayoutSettings((settings) => ({
+                              ...settings,
+                              codeOverflow,
+                            }))
+                          }
+                        />
+                        <SettingRadioList
+                          label="宽表格"
+                          name="table-overflow"
+                          value={layoutSettings.tableOverflow}
+                          options={[
+                            {
+                              value: "wrap",
+                              label: "单元格换行",
+                              description: "优先完整展示表格内容",
+                            },
+                            {
+                              value: "scroll",
+                              label: "横向滚动",
+                              description: "保留列宽和表格结构",
+                            },
+                          ]}
+                          onChange={(tableOverflow) =>
+                            setLayoutSettings((settings) => ({
+                              ...settings,
+                              tableOverflow,
+                            }))
+                          }
+                        />
+                      </div>
+                    </details>
+                  </TabsContent>
+                </TabsContents>
+              </Tabs>
 
-            <section className="setting-section">
-              <h3>内容适配</h3>
-              <SettingChoice
-                label="代码块长行"
-                value={layoutSettings.codeOverflow}
-                options={[
-                  { value: "wrap", label: "自动换行" },
-                  { value: "scroll", label: "横向滚动" },
-                ]}
-                onChange={(codeOverflow) =>
-                  setLayoutSettings((settings) => ({
-                    ...settings,
-                    codeOverflow,
-                  }))
-                }
-              />
-              <SettingChoice
-                label="宽表格"
-                value={layoutSettings.tableOverflow}
-                options={[
-                  { value: "wrap", label: "单元格换行" },
-                  { value: "scroll", label: "横向滚动" },
-                ]}
-                onChange={(tableOverflow) =>
-                  setLayoutSettings((settings) => ({
-                    ...settings,
-                    tableOverflow,
-                  }))
-                }
-              />
-              <SettingChoice
-                label="图片布局"
-                value={layoutSettings.imageLayout}
-                options={[
-                  { value: "stack", label: "普通排列" },
-                  { value: "scroll", label: "横向滑动" },
-                ]}
-                onChange={(imageLayout) =>
-                  setLayoutSettings((settings) => ({
-                    ...settings,
-                    imageLayout,
-                  }))
-                }
-              />
-              <AnimatePresence initial={false} mode="wait">
-                {layoutSettings.imageLayout === "stack" ? (
-                  <motion.div
-                    key="image-width"
-                    className="setting-dependent"
-                    initial={{ opacity: 0, y: -3 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -3 }}
-                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    <SettingChoice
-                      label="图片宽度"
-                      value={layoutSettings.imageWidth}
-                      options={[
-                        { value: "natural", label: "适应原图" },
-                        { value: "full", label: "撑满正文" },
-                      ]}
-                      onChange={(imageWidth) =>
-                        setLayoutSettings((settings) => ({
-                          ...settings,
-                          imageWidth,
-                        }))
-                      }
-                    />
-                  </motion.div>
-                ) : (
-                  <motion.p
-                    key="image-scroll-note"
-                    className="setting-dependent setting-hint"
-                    initial={{ opacity: 0, y: -3 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -3 }}
-                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                  >
-                    连续两张以上图片会组成横滑图组，单张图片保持原样。
-                  </motion.p>
-                )}
-              </AnimatePresence>
-              <div className="setting-dependent">
-                <SettingChoice
-                  label="图片说明"
-                  value={layoutSettings.showImageCaptions ? "show" : "hide"}
-                  options={[
-                    { value: "show", label: "显示图注" },
-                    { value: "hide", label: "隐藏图注" },
-                  ]}
-                  onChange={(value) =>
-                    setLayoutSettings((settings) => ({
-                      ...settings,
-                      showImageCaptions: value === "show",
-                    }))
+              <SheetFooter className="sheet-footer">
+                <Button
+                  variant="ghost"
+                  className="settings-reset"
+                  hoverScale={1.01}
+                  tapScale={0.98}
+                  onClick={
+                    settingsView === "theme"
+                      ? resetThemeSettings
+                      : resetArticleLayout
                   }
-                />
-              </div>
-              <AnimatePresence initial={false}>
-                {layoutSettings.showImageCaptions && (
-                  <motion.div
-                    key="image-caption-settings"
-                    className="setting-dependent"
-                    initial={{ opacity: 0, y: -3 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -3 }}
-                    transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  {settingsView === "theme" ? "恢复当前模板" : "恢复默认版式"}
+                </Button>
+                <div className="settings-footer-actions">
+                  {settingsView === "theme" && (
+                    <Button
+                      variant="outline"
+                      hoverScale={1.01}
+                      tapScale={0.98}
+                      onClick={saveCustomTheme}
+                    >
+                      另存为外观模板
+                    </Button>
+                  )}
+                  <Button
+                    hoverScale={1.01}
+                    tapScale={0.98}
+                    onClick={() => setSettingsOpen(false)}
                   >
-                    <SettingSlider
-                      label="图注字号"
-                      value={layoutSettings.imageCaptionSize}
-                      display={`${layoutSettings.imageCaptionSize}px`}
-                      min={10}
-                      max={16}
-                      onChange={(imageCaptionSize) =>
-                        setLayoutSettings((settings) => ({
-                          ...settings,
-                          imageCaptionSize,
-                        }))
-                      }
-                    />
-                    <SettingChoice
-                      label="图注对齐"
-                      value={layoutSettings.imageCaptionAlign}
-                      options={[
-                        { value: "left", label: "左对齐" },
-                        { value: "center", label: "居中" },
-                      ]}
-                      onChange={(imageCaptionAlign) =>
-                        setLayoutSettings((settings) => ({
-                          ...settings,
-                          imageCaptionAlign,
-                        }))
-                      }
-                    />
-                    <p className="setting-hint">
-                      优先使用图片 title，没有时使用 alt；文字留空则不显示。
-                    </p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </section>
-
-            {themeContract.structureNote && (
-              <section className="setting-section">
-                <h3>模板结构</h3>
-                <p className="structure-note">
-                  {themeContract.structureNote}
-                </p>
-              </section>
-            )}
-
-            {isControlEditable("headingStyle") && (
-              <section className="setting-section">
-                <h3>标题造型</h3>
-                <div className="choice-grid">
-                  {(
-                    [
-                      ["bar", "竖线"],
-                      ["underline", "下划线"],
-                      ["label", "标签"],
-                    ] as [HeadingStyle, string][]
-                  ).map(([value, label]) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      variant={
-                        activeTheme.headingStyle === value
-                          ? "secondary"
-                          : "outline"
-                      }
-                      hoverScale={1.015}
-                      tapScale={0.98}
-                      onClick={() => updateTheme("headingStyle", value)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
+                    完成
+                  </Button>
                 </div>
-              </section>
-            )}
-
-            {isControlEditable("fontFamily") && (
-              <section className="setting-section">
-                <h3>字体气质</h3>
-                <div className="choice-grid">
-                  {(
-                    [
-                      ["sans", "现代"],
-                      ["serif", "人文"],
-                      ["rounded", "圆润"],
-                    ] as [FontFamily, string][]
-                  ).map(([value, label]) => (
-                    <Button
-                      key={value}
-                      type="button"
-                      variant={
-                        activeTheme.fontFamily === value
-                          ? "secondary"
-                          : "outline"
-                      }
-                      hoverScale={1.015}
-                      tapScale={0.98}
-                      onClick={() => updateTheme("fontFamily", value)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-              </section>
-            )}
-          </div>
-
-          <SheetFooter className="sheet-footer">
-            <Button
-              variant="outline"
-              hoverScale={1.015}
-              tapScale={0.98}
-              onClick={resetSettings}
-            >
-              恢复默认
-            </Button>
-            <Button
-              hoverScale={1.015}
-              tapScale={0.98}
-              onClick={saveCustomTheme}
-            >
-              保存为新模板
-            </Button>
-          </SheetFooter>
+              </SheetFooter>
+            </>
+          )}
         </SheetContent>
       </Sheet>
     </div>

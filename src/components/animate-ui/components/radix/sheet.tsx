@@ -45,6 +45,7 @@ function SheetClose(props: SheetCloseProps) {
 
 type SheetContentProps = SheetContentPrimitiveProps & {
   showCloseButton?: boolean;
+  showOverlay?: boolean;
 };
 
 function SheetContent({
@@ -52,11 +53,12 @@ function SheetContent({
   children,
   side = 'right',
   showCloseButton = true,
+  showOverlay = true,
   ...props
 }: SheetContentProps) {
   return (
     <SheetPortalPrimitive>
-      <SheetOverlay />
+      {showOverlay && <SheetOverlay />}
       <SheetContentPrimitive
         className={cn(
           'bg-background fixed z-50 flex flex-col gap-4 shadow-lg',
