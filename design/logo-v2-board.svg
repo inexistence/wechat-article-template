@@ -1,0 +1,144 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720">
+  <rect width="1200" height="720" fill="#f7f7f5" />
+
+  <g fill="#20201f">
+    <g transform="translate(96 92) scale(5)">
+      <path d="M5 4h16.25L27 9.75V28h-3V11l-4-4H8v21H5V4Z" />
+      <path
+        fill-rule="evenodd"
+        d="M11 11h11v13H11V11Zm3 3v2.5h5V14h-5Zm0 5.5V22h5v-2.5h-5Z"
+        clip-rule="evenodd"
+      />
+    </g>
+
+    <text
+      x="96"
+      y="340"
+      font-family="Avenir Next, PingFang SC, Hiragino Sans GB, sans-serif"
+      font-size="24"
+      font-weight="650"
+      letter-spacing="2"
+    >
+      排版间
+    </text>
+  </g>
+
+  <line x1="400" y1="72" x2="400" y2="648" stroke="#dededb" />
+
+  <g transform="translate(480 104)">
+    <text
+      x="0"
+      y="0"
+      fill="#777773"
+      font-family="Avenir Next, PingFang SC, sans-serif"
+      font-size="14"
+      letter-spacing="1"
+    >
+      页头组合
+    </text>
+    <g transform="translate(0 44)" fill="#20201f">
+      <g transform="scale(1.25)">
+        <path d="M5 4h16.25L27 9.75V28h-3V11l-4-4H8v21H5V4Z" />
+        <path
+          fill-rule="evenodd"
+          d="M11 11h11v13H11V11Zm3 3v2.5h5V14h-5Zm0 5.5V22h5v-2.5h-5Z"
+          clip-rule="evenodd"
+        />
+      </g>
+      <text
+        x="54"
+        y="31"
+        font-family="Avenir Next, PingFang SC, Hiragino Sans GB, sans-serif"
+        font-size="24"
+        font-weight="650"
+        letter-spacing="2"
+      >
+        排版间
+      </text>
+    </g>
+  </g>
+
+  <g transform="translate(480 270)">
+    <text
+      x="0"
+      y="0"
+      fill="#777773"
+      font-family="Avenir Next, PingFang SC, sans-serif"
+      font-size="14"
+      letter-spacing="1"
+    >
+      小尺寸
+    </text>
+
+    <g transform="translate(0 40)" fill="#20201f">
+      <g transform="scale(1)">
+        <path d="M5 4h16.25L27 9.75V28h-3V11l-4-4H8v21H5V4Z" />
+        <path
+          fill-rule="evenodd"
+          d="M11 11h11v13H11V11Zm3 3v2.5h5V14h-5Zm0 5.5V22h5v-2.5h-5Z"
+          clip-rule="evenodd"
+        />
+      </g>
+      <text
+        x="48"
+        y="25"
+        font-family="Avenir Next, PingFang SC, sans-serif"
+        font-size="15"
+        font-weight="650"
+        letter-spacing="1.2"
+      >
+        排版间
+      </text>
+    </g>
+
+    <g transform="translate(210 48) scale(.75)" fill="#20201f">
+      <path d="M5 4h16.25L27 9.75V28h-3V11l-4-4H8v21H5V4Z" />
+      <path
+        fill-rule="evenodd"
+        d="M11 11h11v13H11V11Zm3 3v2.5h5V14h-5Zm0 5.5V22h5v-2.5h-5Z"
+        clip-rule="evenodd"
+      />
+    </g>
+
+    <g transform="translate(290 52) scale(.5)" fill="#20201f">
+      <path d="M5 4h16.25L27 9.75V28h-3V11l-4-4H8v21H5V4Z" />
+      <path
+        fill-rule="evenodd"
+        d="M11 11h11v13H11V11Zm3 3v2.5h5V14h-5Zm0 5.5V22h5v-2.5h-5Z"
+        clip-rule="evenodd"
+      />
+    </g>
+  </g>
+
+  <g transform="translate(480 482)">
+    <text
+      x="0"
+      y="0"
+      fill="#777773"
+      font-family="Avenir Next, PingFang SC, sans-serif"
+      font-size="14"
+      letter-spacing="1"
+    >
+      构形
+    </text>
+    <text
+      x="0"
+      y="52"
+      fill="#20201f"
+      font-family="Avenir Next, PingFang SC, sans-serif"
+      font-size="18"
+      font-weight="600"
+    >
+      门框是「间」，折角是页面，内芯是排版后的段落。
+    </text>
+    <text
+      x="0"
+      y="90"
+      fill="#777773"
+      font-family="Avenir Next, PingFang SC, sans-serif"
+      font-size="15"
+    >
+      单色 · 无描边 · 无生成毛边 · 16px 可辨识
+    </text>
+  </g>
+</svg>

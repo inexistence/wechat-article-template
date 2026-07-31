@@ -129,14 +129,14 @@ textarea {
   display: inline-flex;
   width: fit-content;
   align-items: center;
-  gap: 9px;
+  gap: 7px;
   color: inherit;
   text-decoration: none;
 }
 
 .wordmark > img {
-  width: 25px;
-  height: 25px;
+  width: 20px;
+  height: 20px;
   display: block;
   flex: 0 0 auto;
   object-fit: contain;
@@ -496,6 +496,48 @@ textarea {
   --thumbnail-footer-right: 7px;
   --thumbnail-footer-opacity: 0.42;
   --thumbnail-footer-shadow: 0 4px 0 var(--thumbnail-text);
+}
+
+.theme-thumbnail--geek-manual {
+  --thumbnail-marker-width: 3px;
+  --thumbnail-marker-height: 3px;
+  --thumbnail-marker-top: 7px;
+  --thumbnail-marker-left: 8px;
+  --thumbnail-marker-background: var(--thumbnail-secondary);
+  --thumbnail-marker-radius: 50%;
+  --thumbnail-marker-shadow:
+    6px 0 0 var(--thumbnail-secondary),
+    12px 0 0 var(--thumbnail-secondary);
+  --thumbnail-title-height: 2px;
+  --thumbnail-title-top: 14px;
+  --thumbnail-title-left: 7px;
+  --thumbnail-title-right: 7px;
+  --thumbnail-title-background: var(--thumbnail-text);
+  --thumbnail-body-height: 18px;
+  --thumbnail-body-top: 21px;
+  --thumbnail-body-background: var(--thumbnail-text);
+  --thumbnail-body-radius: 2px;
+  --thumbnail-body-opacity: 1;
+  --thumbnail-body-shadow:
+    inset 0 4px 0
+      color-mix(
+        in srgb,
+        var(--thumbnail-accent) 28%,
+        var(--thumbnail-text)
+      );
+  --thumbnail-footer-width: 17px;
+  --thumbnail-footer-height: 2px;
+  --thumbnail-footer-top: 44px;
+  --thumbnail-footer-left: 7px;
+  --thumbnail-footer-background: var(--thumbnail-accent);
+  --thumbnail-footer-opacity: 1;
+  --thumbnail-footer-shadow:
+    20px 0 0
+      color-mix(
+        in srgb,
+        var(--thumbnail-text) 32%,
+        var(--thumbnail-paper)
+      );
 }
 
 .theme-copy strong,

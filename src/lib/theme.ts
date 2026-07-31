@@ -1,6 +1,6 @@
 export type HeadingStyle = "bar" | "underline" | "label"
 export type FontFamily = "sans" | "serif" | "rounded"
-export type ThemeRenderer = "island-log" | "juya-daily"
+export type ThemeRenderer = "island-log" | "juya-daily" | "geek-manual"
 export type ThemeRendererId = "default" | ThemeRenderer
 
 export type ArticleTheme = {
@@ -104,6 +104,19 @@ export const THEME_RENDERER_CONTRACTS = {
       headingStyle: fixed("圆角标题是模板固定结构。"),
     },
   },
+  "geek-manual": {
+    id: "geek-manual",
+    name: "极客手册",
+    typographyProfile: "system",
+    structureNote:
+      "工程编号标题、注释式小标题、终端代码栏和数据表头是固定结构。留白与圆角控制内容容器，字体气质应用于正文，技术标签固定使用等宽字体。",
+    capabilities: {
+      ...DEFAULT_CAPABILITIES,
+      spacing: partial("控制画布边距与主要内容块间距。"),
+      radius: partial("作用于提示、代码、图片和表格容器。"),
+      headingStyle: fixed("工程编号标题是模板固定结构。"),
+    },
+  },
 } satisfies Record<ThemeRendererId, ThemeRendererContract>
 
 export const THEME_CONTROL_LABELS: Record<ThemeControl, string> = {
@@ -119,7 +132,11 @@ export const THEME_CONTROL_LABELS: Record<ThemeControl, string> = {
 }
 
 export function isThemeRenderer(value: unknown): value is ThemeRenderer {
-  return value === "island-log" || value === "juya-daily"
+  return (
+    value === "island-log" ||
+    value === "juya-daily" ||
+    value === "geek-manual"
+  )
 }
 
 export function getThemeRendererId(theme: ArticleTheme): ThemeRendererId {
@@ -432,5 +449,23 @@ export const BUILTIN_THEMES: Record<string, ArticleTheme> = {
     headingStyle: "underline",
     fontFamily: "sans",
     renderer: "juya-daily",
+  },
+  geek: {
+    id: "geek",
+    name: "极客",
+    description: "工程 · 实战",
+    accent: "#24875c",
+    secondary: "#b6d957",
+    text: "#1b2922",
+    paper: "#f7faf7",
+    quote: "#eaf1ec",
+    code: "#17201b",
+    fontSize: 16,
+    lineHeight: 1.88,
+    spacing: 22,
+    radius: 8,
+    headingStyle: "label",
+    fontFamily: "sans",
+    renderer: "geek-manual",
   },
 }

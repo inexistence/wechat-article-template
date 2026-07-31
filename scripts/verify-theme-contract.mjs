@@ -64,6 +64,7 @@ try {
     default: BUILTIN_THEMES.clean,
     "island-log": BUILTIN_THEMES.island,
     "juya-daily": BUILTIN_THEMES.juya,
+    "geek-manual": BUILTIN_THEMES.geek,
   }
 
   for (const [rendererId, contract] of Object.entries(
