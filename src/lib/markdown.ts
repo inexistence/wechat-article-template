@@ -17,7 +17,7 @@ export type ArticleTheme = {
   headingStyle: HeadingStyle
   fontFamily: FontFamily
   secondary?: string
-  renderer?: "island-log"
+  renderer?: "island-log" | "juya-daily"
 }
 
 export const DEFAULT_MARKDOWN = `# 把注意力还给内容
@@ -130,6 +130,24 @@ export const BUILTIN_THEMES: Record<string, ArticleTheme> = {
     headingStyle: "bar",
     fontFamily: "rounded",
     renderer: "island-log",
+  },
+  juya: {
+    id: "juya",
+    name: "橘鸦",
+    description: "日报 · 清爽",
+    accent: "#c96442",
+    secondary: "#a0f9b0",
+    text: "#141413",
+    paper: "#faf9f5",
+    quote: "#f0eee6",
+    code: "#ffffff",
+    fontSize: 15,
+    lineHeight: 1.8,
+    spacing: 18,
+    radius: 12,
+    headingStyle: "underline",
+    fontFamily: "sans",
+    renderer: "juya-daily",
   },
 }
 
@@ -436,6 +454,43 @@ function buildIslandStyles(theme: ArticleTheme) {
   }
 }
 
+function buildJuyaStyles(theme: ArticleTheme) {
+  const family =
+    'Optima,"Microsoft YaHei","PingFang SC","Hiragino Sans GB",sans-serif'
+  const mono =
+    '"Operator Mono",Consolas,Monaco,Menlo,"SFMono-Regular",monospace'
+  const contentMargin = Math.max(10, theme.spacing)
+  const secondary = theme.secondary || "#a0f9b0"
+
+  return {
+    root: `padding:${theme.spacing + 2}px 0 48px;color:${theme.text};background:${theme.paper};font-family:${family};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};word-break:break-word;overflow-wrap:break-word;text-align:left`,
+    h1: `margin:10px 0 15px;padding:2px 10px;color:${theme.accent};font-family:${family};font-size:${theme.fontSize + 3}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:center`,
+    h2: `margin:30px 10px 15px;padding:12px 18px;color:${theme.text};background:${theme.quote};border:0;border-bottom:4px solid ${secondary};border-radius:${theme.radius}px;font-family:${family};font-size:${theme.fontSize + 1}px;line-height:1.5;letter-spacing:0.06em;font-weight:700;text-align:left;word-break:break-all`,
+    h3: `margin:28px ${contentMargin}px 12px;color:${theme.accent};font-family:${family};font-size:${theme.fontSize + 1}px;line-height:1.5;letter-spacing:0.04em;font-weight:700`,
+    h4: `margin:24px ${contentMargin}px 10px;color:${theme.text};font-family:${family};font-size:${theme.fontSize}px;line-height:1.5;font-weight:700`,
+    p: `margin:0 ${contentMargin}px;padding:5px 0;color:${theme.text};font-size:${theme.fontSize}px;line-height:${theme.lineHeight};letter-spacing:0.06em;text-align:left;text-indent:0`,
+    strong: `color:#1f0c03;font-weight:700`,
+    em: "font-style:italic",
+    del: "opacity:0.55",
+    a: `color:${theme.accent};text-decoration:none;border-bottom:1px solid ${theme.accent}`,
+    blockquote: `margin:20px 10px 10px;padding:9px 12px;color:${theme.text};background:#fdfcfa;border:0.8px solid #dad8d4;border-radius:${theme.radius}px;font-size:${theme.fontSize}px;line-height:${theme.lineHeight};letter-spacing:0.06em;overflow:auto`,
+    ul: `margin:8px 15px;padding:0 0 0 18px;color:${theme.text};list-style-type:disc;list-style-position:outside`,
+    ol: `margin:8px 15px;padding:0 0 0 18px;color:${theme.text};list-style-type:decimal;list-style-position:outside`,
+    li: `margin:5px 0;color:${theme.text};font-size:${Math.max(14, theme.fontSize - 1)}px;line-height:${theme.lineHeight};letter-spacing:0.06em;text-align:left`,
+    hr: `height:0;margin:20px 10px 10px;border:0;border-top:1px dashed #b8b8b8;background:transparent`,
+    pre: `margin:16px 10px;padding:12px;overflow-x:auto;color:#383a42;background:${theme.code};border:0.5px solid #dad8d4;border-radius:${theme.radius}px;font-family:${mono};font-size:${Math.max(12, theme.fontSize - 1)}px;line-height:1.75;white-space:pre-wrap;word-break:break-all`,
+    inlineCode: `margin:0 2px;padding:2px 4px;color:#5c1616;background:#f0efeb;border:0.5px solid #d1cfcc;border-radius:${Math.max(6, theme.radius - 4)}px;font-family:${mono};font-size:0.9em;line-height:1.8;letter-spacing:0;word-break:break-all`,
+    inlineLabelCode: `margin:0 2px;padding:2px 4px;color:${theme.accent};background:#fdfcfa;border:0.5px solid #d1cfcc;border-radius:${Math.max(6, theme.radius - 6)}px;font-family:${mono};font-size:0.9em;line-height:1.8;letter-spacing:0;word-break:break-all`,
+    img: `display:block;max-width:calc(100% - 20px);height:auto;margin:30px auto;border:0;border-radius:${theme.radius}px;object-fit:fill;overflow:hidden`,
+    table: `display:table;width:100%;margin:0;border:0!important;border-collapse:collapse;border-spacing:0;table-layout:fixed;background:#fdfcfa;color:${theme.text};font-size:${Math.max(13, theme.fontSize - 1)}px;line-height:1.5;text-align:left`,
+    thead: "border:0!important;background:transparent",
+    tbody: "border:0!important;background:transparent",
+    tr: "border:0!important;background:#fdfcfa",
+    th: `min-width:85px;padding:7px 10px;border:0!important;color:${theme.text};background:${theme.quote};font-weight:700;text-align:left;overflow-wrap:break-word;word-break:break-all`,
+    td: `min-width:85px;padding:7px 10px;border:0!important;color:${theme.text};background:transparent;text-align:left;overflow-wrap:break-word;word-break:break-all`,
+  }
+}
+
 type IslandCodeToken = {
   start: number
   end: number
@@ -529,6 +584,8 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
   const styles =
     theme.renderer === "island-log"
       ? buildIslandStyles(theme)
+      : theme.renderer === "juya-daily"
+        ? buildJuyaStyles(theme)
       : buildStyles(theme)
   root.setAttribute("style", styles.root)
 
@@ -563,7 +620,17 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
     root.querySelectorAll(selector).forEach((node) => node.setAttribute("style", style))
   })
   root.querySelectorAll('code[data-inline="true"]').forEach((node) => {
-    node.setAttribute("style", styles.inlineCode)
+    const useLabelStyle =
+      theme.renderer === "juya-daily" &&
+      Boolean(node.closest("h1,h2,h3,h4,li"))
+    node.setAttribute(
+      "style",
+      useLabelStyle &&
+        "inlineLabelCode" in styles &&
+        typeof styles.inlineLabelCode === "string"
+        ? styles.inlineLabelCode
+        : styles.inlineCode,
+    )
     node.removeAttribute("data-inline")
   })
   root.querySelectorAll("pre").forEach((node) => {
@@ -640,6 +707,72 @@ export function inlineDocument(html: string, theme: ArticleTheme) {
         )
         .join("")
       rule.replaceWith(dots)
+    })
+  } else if (theme.renderer === "juya-daily") {
+    root.querySelectorAll("table").forEach((table) => {
+      const wrapper = doc.createElement("section")
+      wrapper.setAttribute(
+        "style",
+        `margin:10px 15px;overflow:hidden;background:#fdfcfa;border:1px solid #d1cfcc;border-radius:${theme.radius}px`,
+      )
+      wrapper.setAttribute("data-juya-table", "true")
+      table.before(wrapper)
+      wrapper.append(table)
+
+      table.querySelectorAll("tbody tr").forEach((row, rowIndex) => {
+        row.setAttribute(
+          "style",
+          rowIndex % 2 === 1
+            ? "border:0!important;background:#f8f7f2"
+            : styles.tr,
+        )
+      })
+    })
+
+    root.querySelectorAll("li").forEach((item) => {
+      const firstNode = item.firstChild
+      if (
+        firstNode?.nodeType !== Node.ELEMENT_NODE ||
+        (firstNode as Element).tagName !== "CODE"
+      ) {
+        return
+      }
+
+      item.setAttribute(
+        "style",
+        `${styles.li};margin-left:-18px;padding-left:0;list-style-type:none`,
+      )
+      const row = doc.createElement("section")
+      row.setAttribute(
+        "style",
+        "display:flex;align-items:baseline;margin:0;padding:0",
+      )
+      const label = doc.createElement("span")
+      label.setAttribute(
+        "style",
+        "display:inline-block;flex:0 0 auto;margin:0;line-height:inherit",
+      )
+      const content = doc.createElement("span")
+      content.setAttribute(
+        "style",
+        "display:block;flex:1 1 auto;margin-left:2px;word-break:break-word;overflow-wrap:break-word;font-size:inherit;line-height:inherit",
+      )
+
+      label.append(firstNode)
+      while (item.firstChild) content.append(item.firstChild)
+      row.append(label, content)
+      item.append(row)
+    })
+
+    root.querySelectorAll("hr").forEach((rule) => {
+      const divider = doc.createElement("section")
+      divider.textContent = "\u00a0"
+      divider.setAttribute(
+        "style",
+        "height:0;margin:20px 10px 10px;border:0;border-top:1px dashed #b8b8b8;font-size:0;line-height:0;overflow:hidden",
+      )
+      divider.setAttribute("aria-hidden", "true")
+      rule.replaceWith(divider)
     })
   } else {
     root.querySelectorAll("hr").forEach((rule) => {

@@ -430,6 +430,38 @@ textarea {
   box-shadow: 9px 0 0 #f7cd67, 18px 0 0 #f7cd67;
 }
 
+.theme-thumbnail--juya i {
+  display: none;
+}
+
+.theme-thumbnail--juya b {
+  height: 5px;
+  top: 8px;
+  left: 10px;
+  right: 10px;
+  background: var(--thumb-accent);
+  border-radius: 1px;
+}
+
+.theme-thumbnail--juya em {
+  height: 12px;
+  top: 20px;
+  opacity: 1;
+  background: #f0eee6;
+  border-bottom: 3px solid #a0f9b0;
+  border-radius: 4px;
+  box-shadow: none;
+}
+
+.theme-thumbnail--juya small {
+  width: auto;
+  height: 1px;
+  top: 39px;
+  opacity: 0.42;
+  background: var(--thumb-text);
+  box-shadow: 0 4px 0 var(--thumb-text);
+}
+
 .theme-thumbnail i {
   width: 4px;
   height: 9px;

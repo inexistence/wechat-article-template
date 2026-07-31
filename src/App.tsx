@@ -60,7 +60,7 @@ import {
 
 const DOCUMENT_KEY = "paibanjian-react-document-v3"
 const CUSTOM_THEMES_KEY = "paibanjian-react-themes-v3"
-const THEME_VERSION = 7
+const THEME_VERSION = 8
 
 type WorkspaceView = "write" | "preview" | "style"
 type PreviewMode = "visual" | "html"
@@ -114,7 +114,9 @@ function isArticleTheme(value: unknown): value is ArticleTheme {
       value.fontFamily === "serif" ||
       value.fontFamily === "rounded") &&
     (value.secondary === undefined || typeof value.secondary === "string") &&
-    (value.renderer === undefined || value.renderer === "island-log")
+    (value.renderer === undefined ||
+      value.renderer === "island-log" ||
+      value.renderer === "juya-daily")
   )
 }
 
@@ -189,6 +191,7 @@ function ThemeThumbnail({ theme }: { theme: ArticleTheme }) {
       className={cn(
         "theme-thumbnail",
         theme.renderer === "island-log" && "theme-thumbnail--island",
+        theme.renderer === "juya-daily" && "theme-thumbnail--juya",
       )}
       style={
         {
@@ -1058,11 +1061,13 @@ export default function App() {
               />
             </section>
 
-            {activeTheme.renderer === "island-log" ? (
+            {activeTheme.renderer ? (
               <section className="setting-section">
                 <h3>模板结构</h3>
                 <p className="structure-note">
-                  叶片标题、手写引用和点状分隔是这套模板的固定结构。颜色、字体、字号和阅读参数仍可调整。
+                  {activeTheme.renderer === "island-log"
+                    ? "叶片标题、手写引用和点状分隔是这套模板的固定结构。颜色、字体、字号和阅读参数仍可调整。"
+                    : "米色圆角标题、绿色底线、标签式编号和虚线分隔是这套日报模板的固定结构。颜色、字体、字号和阅读参数仍可调整。"}
                 </p>
               </section>
             ) : (

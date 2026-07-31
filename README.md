@@ -30,7 +30,7 @@ npm run preview
 ## 主要功能
 
 - Markdown 实时预览
-- 四套内置公众号模板：留白、文墨、简报和岛屿
+- 五套内置公众号模板：留白、文墨、简报、岛屿和橘鸦
 - 自定义颜色、字号、行距、留白、圆角和标题造型
 - 草稿与个人模板本地保存
 - 一键复制带内联 CSS 的富文本
@@ -40,3 +40,6 @@ npm run preview
 ## 开源协议
 
 本项目基于 [MIT License](LICENSE) 开源。
+
+“橘鸦”模板参考并重新实现自 MIT 开源项目
+[MurphyLo/md2juya](https://github.com/MurphyLo/md2juya) 的 Juya AI 日报版式。
