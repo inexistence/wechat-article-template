@@ -1,0 +1,22 @@
+src/App.tsx
+  s_ced79e146f218e::t_74ac18e4c1d06e 5,90,356,368-370,372,375-378,383,386-416,418-461,489-490,514-517,577-582,713,766,769-771,917-918,1052,1057-1058,1246,1248-1251,1254-1265,1267-1269,1273-1282,1284-1290,1292-1329,1331-1660,1662-1663,1665,1667,1669-1676,1678-1680
+src/components/animate-ui/components/radix/sheet.tsx
+  s_ced79e146f218e::t_000dac2245414f 48,56,61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "f9a2dc490d7c1286e5628504291335274e16f3b8",
+  "prompts": {},
+  "logical_commit_id": "f9a2dc490d7c1286e5628504291335274e16f3b8",
+  "sessions": {
+    "s_ced79e146f218e": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fb7bc-a754-7580-8dfd-5380ef809878",
+        "model": "unknown"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>"
+    }
+  }
+}
