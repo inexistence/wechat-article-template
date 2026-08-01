@@ -992,6 +992,29 @@ textarea {
   scrollbar-width: none;
 }
 
+.article-preview [aria-label="图片画廊"] {
+  scrollbar-color: oklch(0.68 0 0 / 0.65) transparent;
+  scrollbar-width: thin;
+}
+
+.article-preview [aria-label="图片画廊"]::-webkit-scrollbar {
+  display: block;
+  height: 7px;
+}
+
+.article-preview [aria-label="图片画廊"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.article-preview [aria-label="图片画廊"]::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: oklch(0.68 0 0 / 0.65);
+}
+
+.article-preview [aria-label="图片画廊"]::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.52 0 0 / 0.8);
+}
+
 .html-output {
   height: calc(100% - 20px);
   margin-top: 10px;

@@ -1153,6 +1153,7 @@ function groupScrollableImages(
     hint.append(hintText, arrow)
 
     const scroller = doc.createElement("section")
+    scroller.setAttribute("aria-label", "图片画廊")
     scroller.setAttribute(
       "style",
       `display:flex;align-items:stretch;margin:0;padding:${shadowBlockStartInset}px 0 ${shadowBlockEndInset}px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;font-size:0;line-height:0`,
