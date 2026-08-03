@@ -1,0 +1,22 @@
+src/App.tsx
+  s_06556b28b70520::t_39988add52a30d 24-31,535-542,544-552,557-558,1288
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "466a216074f4ed0a74864f90c22c37983400db3e",
+  "prompts": {},
+  "logical_commit_id": "466a216074f4ed0a74864f90c22c37983400db3e",
+  "sessions": {
+    "s_06556b28b70520": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fc557-d2bd-7103-95df-b7836afae501",
+        "model": "gpt-5.6-terra"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>",
+      "total_additions": 34,
+      "total_deletions": 14
+    }
+  }
+}
