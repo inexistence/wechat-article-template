@@ -21,7 +21,14 @@ import {
 } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { DropdownMenu } from "radix-ui"
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import type * as React from "react"
 import { toast } from "sonner"
 
@@ -527,15 +534,28 @@ export default function App() {
     [markdown, activeTheme, layoutSettings],
   )
 
+  const renderPreview = useCallback(
+    (preview: HTMLDivElement) => {
+      preview.innerHTML = finalHtml
+      if (darkPreview) applyWechatDarkMode(preview)
+    },
+    [darkPreview, finalHtml],
+  )
+
+  const setPreviewArticleRef = useCallback(
+    (preview: HTMLDivElement | null) => {
+      previewArticleRef.current = preview
+      if (preview) renderPreview(preview)
+    },
+    [renderPreview],
+  )
+
   useLayoutEffect(() => {
     const previews = [previewArticleRef.current, mobilePreviewArticleRef.current]
       .filter((preview): preview is HTMLDivElement => preview !== null)
 
-    previews.forEach((preview) => {
-      preview.innerHTML = finalHtml
-      if (darkPreview) applyWechatDarkMode(preview)
-    })
-  }, [darkPreview, finalHtml, settingsPreviewOpen])
+    previews.forEach(renderPreview)
+  }, [renderPreview, settingsPreviewOpen])
 
   const characterCount = useMemo(
     () =>
@@ -1265,7 +1285,7 @@ export default function App() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                   >
-                    <div ref={previewArticleRef} />
+                    <div ref={setPreviewArticleRef} />
                   </motion.article>
                 </div>
               </TabsContent>
