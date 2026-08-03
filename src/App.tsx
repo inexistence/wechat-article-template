@@ -718,7 +718,6 @@ export default function App() {
   const createDocument = () => {
     setTitle("未命名文章")
     setMarkdown(DEFAULT_MARKDOWN)
-    setLayoutSettings(structuredClone(DEFAULT_ARTICLE_LAYOUT_SETTINGS))
   }
 
   const persistCustomThemes = (themes: ArticleTheme[]) => {
@@ -822,7 +821,7 @@ export default function App() {
               新建文章？
             </AlertDialogTitle>
             <AlertDialogDescription className="confirm-dialog-description">
-              当前编辑区将恢复为默认参考文章；已保存的模板不会受影响。
+              当前标题和正文将恢复为默认内容；模板外观和排版设置会保留。
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="confirm-dialog-actions">

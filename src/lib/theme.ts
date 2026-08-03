@@ -24,7 +24,7 @@ export type ArticleLayoutSettings = {
 
 export const DEFAULT_ARTICLE_LAYOUT_SETTINGS: ArticleLayoutSettings = {
   tableOverflow: "wrap",
-  codeOverflow: "wrap",
+  codeOverflow: "scroll",
   paragraphAlign: "justify",
   firstLineIndent: false,
   paragraphSpacing: "standard",
