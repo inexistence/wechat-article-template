@@ -1,0 +1,32 @@
+src/index.css
+  s_0055798beba2f2::t_db64140539642b 791-802
+README.md
+  s_0055798beba2f2::t_db64140539642b 36
+scripts/verify-theme-contract.mjs
+  s_0055798beba2f2::t_db64140539642b 510-543
+src/App.tsx
+  s_0055798beba2f2::t_db64140539642b 2,116,122,184-185,264,269,280,282-285,1167-1182,1549-1563
+src/lib/theme.ts
+  s_0055798beba2f2::t_db64140539642b 18,32
+src/lib/markdown.ts
+  s_0055798beba2f2::t_db64140539642b 1378-1485,1577
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "bf10d1f5593a6b2975e9efd6e9417571cf6926dd",
+  "prompts": {},
+  "logical_commit_id": "bf10d1f5593a6b2975e9efd6e9417571cf6926dd",
+  "sessions": {
+    "s_0055798beba2f2": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "019fda1a-76f5-7cf1-b4d4-e1c5dceea2b2",
+        "model": "gpt-5.6-sol"
+      },
+      "human_author": "inexistence <inexistenceorz@gmail.com>",
+      "total_additions": 201,
+      "total_deletions": 1
+    }
+  }
+}
