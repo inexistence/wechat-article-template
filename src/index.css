@@ -788,6 +788,18 @@ textarea {
   height: 14px;
 }
 
+.editor-toolbar-divider {
+  width: 1px;
+  height: 16px;
+  margin-inline: 5px;
+  background: var(--border);
+}
+
+.editor-toolbar .is-active {
+  color: var(--foreground);
+  background: var(--accent);
+}
+
 .markdown-editor {
   width: 100%;
   height: 100%;

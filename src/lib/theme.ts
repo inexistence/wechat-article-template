@@ -15,6 +15,7 @@ export type ArticleLayoutSettings = {
   paragraphAlign: ParagraphAlign
   firstLineIndent: boolean
   paragraphSpacing: ParagraphSpacing
+  linkReferences: boolean
   imageLayout: ImageLayout
   imageWidth: ImageWidth
   showImageCaptions: boolean
@@ -28,6 +29,7 @@ export const DEFAULT_ARTICLE_LAYOUT_SETTINGS: ArticleLayoutSettings = {
   paragraphAlign: "justify",
   firstLineIndent: false,
   paragraphSpacing: "standard",
+  linkReferences: false,
   imageLayout: "scroll",
   imageWidth: "natural",
   showImageCaptions: true,

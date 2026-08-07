@@ -1375,6 +1375,114 @@ function applyArticleLayoutSettings(
   )
 }
 
+function applyLinkReferences(
+  root: HTMLElement,
+  doc: Document,
+  settings: ArticleLayoutSettings,
+  tokens: RenderTokens,
+  contentInset: number,
+) {
+  if (!settings.linkReferences) return
+
+  const references: { url: string; label: string; index: number }[] = []
+  const referencesByUrl = new Map<string, (typeof references)[number]>()
+
+  root.querySelectorAll("a[href]").forEach((link) => {
+    const url = link.getAttribute("href")?.trim() || ""
+    if (!/^https?:\/\//i.test(url)) return
+
+    let reference = referencesByUrl.get(url)
+    if (!reference) {
+      reference = {
+        url,
+        label: link.textContent?.trim() || url,
+        index: references.length + 1,
+      }
+      references.push(reference)
+      referencesByUrl.set(url, reference)
+    }
+
+    const replacement = doc.createElement("span")
+    replacement.setAttribute(
+      "style",
+      `color:${tokens.colors.accent};text-decoration:none;border:0`,
+    )
+    while (link.firstChild) replacement.append(link.firstChild)
+
+    const marker = doc.createElement("span")
+    marker.textContent = `[${reference.index}]`
+    marker.setAttribute(
+      "style",
+      `display:inline-block;margin-left:2px;color:${tokens.colors.accent};font-size:0.72em;font-weight:700;line-height:0;vertical-align:super;white-space:nowrap`,
+    )
+    replacement.append(marker)
+    link.replaceWith(replacement)
+  })
+
+  if (references.length === 0) return
+
+  const referenceSection = doc.createElement("section")
+  referenceSection.setAttribute("data-link-references", "true")
+  referenceSection.setAttribute(
+    "style",
+    `display:block;margin:2.6em ${contentInset}px 0;padding:1.1em 0 0;border-top:1px solid ${tokens.colors.border};color:${tokens.colors.text};font-family:${tokens.typography.body};font-size:${tokens.typography.captionSize}px;line-height:1.75;text-align:left;text-indent:0`,
+  )
+
+  const title = doc.createElement("span")
+  title.textContent = "参考链接"
+  title.setAttribute(
+    "style",
+    `display:block;margin:0 0 0.8em;color:${tokens.colors.text};font-size:${tokens.typography.captionSize}px;font-weight:700;letter-spacing:0.08em;opacity:0.78`,
+  )
+  referenceSection.append(title)
+
+  references.forEach((reference) => {
+    const entry = doc.createElement("section")
+    entry.setAttribute(
+      "style",
+      "display:block;margin:0.65em 0 0;padding:0;text-align:left;text-indent:0;word-break:break-word;overflow-wrap:anywhere",
+    )
+
+    const number = doc.createElement("span")
+    number.textContent = `[${reference.index}]`
+    number.setAttribute(
+      "style",
+      `display:inline-block;margin-right:0.45em;color:${tokens.colors.accent};font-weight:700`,
+    )
+    entry.append(number)
+
+    if (reference.label !== reference.url) {
+      const label = doc.createElement("span")
+      label.textContent = reference.label
+      label.setAttribute(
+        "style",
+        `color:${tokens.colors.text};font-weight:600`,
+      )
+      entry.append(label)
+
+      const url = doc.createElement("span")
+      url.textContent = reference.url
+      url.setAttribute(
+        "style",
+        `display:block;margin:0.18em 0 0 2.15em;color:${tokens.colors.text};font-family:${tokens.typography.mono};font-size:${tokens.typography.codeSize}px;line-height:1.6;opacity:0.68;word-break:break-all;overflow-wrap:anywhere`,
+      )
+      entry.append(url)
+    } else {
+      const url = doc.createElement("span")
+      url.textContent = reference.url
+      url.setAttribute(
+        "style",
+        `color:${tokens.colors.text};font-family:${tokens.typography.mono};font-size:${tokens.typography.codeSize}px;opacity:0.68;word-break:break-all;overflow-wrap:anywhere`,
+      )
+      entry.append(url)
+    }
+
+    referenceSection.append(entry)
+  })
+
+  root.append(referenceSection)
+}
+
 export function getArticleStyles(theme: ArticleTheme) {
   const tokens = resolveThemeTokens(theme)
   return RENDERER_DEFINITIONS[getThemeRendererId(theme)].buildStyles(
@@ -1466,6 +1574,7 @@ export function inlineDocument(
     styles.contentInset,
     getThemeRendererContract(theme).output.image.shadow,
   )
+  applyLinkReferences(root, doc, settings, tokens, styles.contentInset)
   root
     .querySelectorAll("pre")
     .forEach((node) => node.removeAttribute("data-language"))

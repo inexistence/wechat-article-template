@@ -1,4 +1,5 @@
 import {
+  BookMarked,
   Bold,
   Braces,
   Check,
@@ -112,11 +113,13 @@ type PersistedLayoutSettings = Omit<
   | "showImageCaptions"
   | "imageCaptionAlign"
   | "imageCaptionSize"
+  | "linkReferences"
 > & {
   imageLayout?: ArticleLayoutSettings["imageLayout"]
   showImageCaptions?: ArticleLayoutSettings["showImageCaptions"]
   imageCaptionAlign?: ArticleLayoutSettings["imageCaptionAlign"]
   imageCaptionSize?: ArticleLayoutSettings["imageCaptionSize"]
+  linkReferences?: ArticleLayoutSettings["linkReferences"]
 }
 
 type SavedDocument = {
@@ -178,6 +181,8 @@ function isArticleLayoutSettings(
     (value.paragraphSpacing === "compact" ||
       value.paragraphSpacing === "standard" ||
       value.paragraphSpacing === "relaxed") &&
+    (value.linkReferences === undefined ||
+      typeof value.linkReferences === "boolean") &&
     (value.imageLayout === undefined ||
       value.imageLayout === "stack" ||
       value.imageLayout === "scroll") &&
@@ -256,10 +261,12 @@ function IconTool({
   label,
   icon,
   onClick,
+  pressed,
 }: {
   label: string
   icon: React.ReactNode
   onClick: () => void
+  pressed?: boolean
 }) {
   return (
     <Tooltip delayDuration={350}>
@@ -270,8 +277,12 @@ function IconTool({
           hoverScale={1.02}
           tapScale={0.96}
           aria-label={label}
+          aria-pressed={pressed}
           onClick={onClick}
-          className="text-muted-foreground hover:text-foreground"
+          className={cn(
+            "text-muted-foreground hover:text-foreground",
+            pressed && "is-active",
+          )}
         >
           {icon}
         </Button>
@@ -1153,6 +1164,22 @@ export default function App() {
               icon={<Code2 />}
               onClick={() => insertMarkdown("code")}
             />
+            <span className="editor-toolbar-divider" aria-hidden="true" />
+            <IconTool
+              label={
+                layoutSettings.linkReferences
+                  ? "关闭链接转文末引用"
+                  : "链接转文末引用"
+              }
+              icon={<BookMarked />}
+              pressed={layoutSettings.linkReferences}
+              onClick={() =>
+                setLayoutSettings((settings) => ({
+                  ...settings,
+                  linkReferences: !settings.linkReferences,
+                }))
+              }
+            />
           </div>
 
           <Textarea
@@ -1519,6 +1546,21 @@ export default function App() {
                           setLayoutSettings((settings) => ({
                             ...settings,
                             paragraphSpacing,
+                          }))
+                        }
+                      />
+                    </section>
+
+                    <section className="setting-section">
+                      <h3>链接</h3>
+                      <SettingSwitch
+                        label="转为文末引用"
+                        description="正文保留引用序号，完整网址集中显示在文章底部"
+                        checked={layoutSettings.linkReferences}
+                        onCheckedChange={(linkReferences) =>
+                          setLayoutSettings((settings) => ({
+                            ...settings,
+                            linkReferences,
                           }))
                         }
                       />

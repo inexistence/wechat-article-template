@@ -507,6 +507,40 @@ try {
     fail("hidden image captions still render visible content")
   }
 
+  const linkReferencesOutput = inlineDocument(
+    markdownToHtml(`阅读[官方文档](https://example.com/docs)，也可查看[同一地址](https://example.com/docs)与[更新日志](https://example.com/changelog)。
+
+[页内导航](#overview)不应转为引用。`),
+    BUILTIN_THEMES.clean,
+    {
+      ...DEFAULT_ARTICLE_LAYOUT_SETTINGS,
+      linkReferences: true,
+    },
+  )
+  const linkReferencesDocument = new DOMParser().parseFromString(
+    `<html><body>${linkReferencesOutput}</body></html>`,
+    "text/html",
+  )
+  const linkReferencesRoot = requireElement(
+    linkReferencesDocument.body.firstElementChild,
+    "link reference fixture produced no root",
+  )
+  const referenceSection = requireElement(
+    linkReferencesRoot.querySelector('[data-link-references="true"]'),
+    "link reference fixture produced no reference section",
+  )
+  if (
+    referenceSection.querySelectorAll("section").length !== 2 ||
+    !referenceSection.textContent.includes("[1]官方文档") ||
+    !referenceSection.textContent.includes("https://example.com/docs") ||
+    !referenceSection.textContent.includes("[2]更新日志") ||
+    linkReferencesRoot.textContent.match(/\[1\]/g)?.length !== 3 ||
+    linkReferencesRoot.querySelector('a[href="https://example.com/docs"]') ||
+    !linkReferencesRoot.querySelector('a[href="#overview"]')
+  ) {
+    fail("link references were not converted, deduplicated, or preserved correctly")
+  }
+
   const clipboardHtml = absolutizeRelativeImageSources(
     markdownToHtml(`![Relative](./images/relative.png)
 
